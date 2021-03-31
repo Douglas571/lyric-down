@@ -1,0 +1,17 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "a command line app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Douglas Socorro",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^7.2.0",
+    "got": "^11.8.2",
+    "jsdom": "^16.5.2",
+    "vorpal": "^1.12.0"
+  }
+}
