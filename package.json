@@ -4,15 +4,22 @@
   "description": "a command line app",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha src/ --timeout=9999999999 -w",
     "start": "node index.js"
   },
   "author": "Douglas Socorro",
   "license": "ISC",
   "dependencies": {
     "commander": "^7.2.0",
+    "common-tags": "^1.8.0",
+    "epub-gen": "^0.1.0",
     "got": "^11.8.2",
     "jsdom": "^16.5.2",
+    "nodepub": "^3.0.1",
     "vorpal": "^1.12.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2"
   }
 }
