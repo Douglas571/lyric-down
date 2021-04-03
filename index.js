@@ -26,6 +26,7 @@ commandLine
   .option('-glfu, --get-lyric-from-url <url...>', 'Get a lyric of a song by url')
   .option('-glfa, --get-lyrics-from-album <name>', 'Get a lyrics of from an album')
   .option('-glfau, --get-lyrics-from-album-url <name...>', 'Get a lyrics from an album url')
+  .option('-ep, --epub', 'Save the lyrics in an epub file')
 
   .option('-s, --save-in <dir>', 'Specify a dir url', app.defaultDir)
   .parse();
@@ -50,7 +51,9 @@ commandLine
     const listOfUrl = option.getLyricsFromAlbumUrl
 
     for(let url of listOfUrl) {
-      await app.getLyricsFromAlbumUrl(url)
+      if(option.epub) {
+        await app.downloadLyricsOfAlbum(url, 'epub')
+      }
     }
   }
 

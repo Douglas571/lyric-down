@@ -2,7 +2,9 @@ const got = require('got')
 const { stripIndents } = require('common-tags')
 const { JSDOM } = require('jsdom')
 const fs = require('fs')
-const path = require('path')
+const Path = require('path')
+
+const saveEpub = require('./epub.js')
 
 
       //const dom = new JSDOM(page)
@@ -55,9 +57,11 @@ async function getLyric(url) {
   save(lyricToSave, title, artist)
 }
 
+//------------------ OUT OF INTERFACE --------------------//
+
 class Application {
   constructor(rootDir) {
-    this.rootDir = rootDir || path.join(__dirname, '..', 'lyrics')
+    this.rootDir = rootDir || Path.join(__dirname, '..', 'lyrics')
   }
 
   async getLyricFromUrl(url, mock) {
@@ -67,7 +71,7 @@ class Application {
     let page;
 
     if(mock) {
-      page = await read(path.join('test-files', mock))
+      page = await read(Path.join('test-files', mock))
     } else {
       page = await getPage(url)//await getLyric(url)
     }
@@ -167,7 +171,7 @@ class Application {
 
     const fileName = `${title.toLowerCase()} - ${artist.toLowerCase()}.txt`
 
-    pathWhereSave = path.join(pathWhereSave, fileName)
+    pathWhereSave = Path.join(pathWhereSave, fileName)
 
     return new Promise((res, rej) => {
       fs.writeFile(pathWhereSave, textToSave, (err) => {
@@ -194,13 +198,94 @@ class Application {
     })
   }
 
+  async getAlbumData(albumUrl) {
+    let name = '';
+    let artist = '';
+    let listOfLyrics = [];
+
+    //download de page
+    console.log('searching album: "' + albumUrl + '"...')
+    const html = await getPage(albumUrl)
+    const page = JSDOM.fragment(html)
+
+    //parse name
+    name = page.querySelector('hgroup.hg1p23 h1 strong').textContent
+    //parse artist
+    artist = page.querySelector('hgroup.hg1p23 h2').textContent
+
+    //parse list of lyrics
+    const links = page.querySelectorAll('tbody tr td div strong a')
+
+    const whereSlice = albumUrl.lastIndexOf('com/')
+    const host = albumUrl.slice(0, whereSlice + 3)
+    links.forEach( link => {
+      let url = host + link.getAttribute('href')
+      listOfLyrics.push(url)
+    })
+
+    return {
+      name,
+      artist,
+      listOfLyrics
+    }
+  }
+
+//------------------- APP USER INTERFACE ----------------------//
+
   async downloadLyricFromUrl(url, pathWhereSave) {
     const lyricData = await this.getLyricFromUrl(url)
     const pathFile = await this.saveLyric(lyricData)
-    console.log(path.basename(pathFile) + "saved in: " + pathFile)
+    console.log(Path.basename(pathFile) + "saved in: " + pathFile)
+  }
+
+  async downloadLyricsOfAlbum(url, saveAs, path) {
+    switch(saveAs) {
+      case 'text': 
+        this.getLyricsFromAlbumUrl(url)
+        break;
+      case 'epub':
+
+         /*
+            {
+              name: String
+              artist: String
+              listOfLyrics: [lyrics]
+            }
+         */
+
+        const albumData = await this.getAlbumData(url)
+
+        albumData.listOfLyrics = albumData.listOfLyrics.map( url => this.getLyricFromUrl(url))
+        albumData.listOfLyrics = await Promise.allSettled(albumData.listOfLyrics)
+        albumData.listOfLyrics = albumData.listOfLyrics.map( result => result.value )
+
+        await saveEpub(albumData)
+
+        //console.log(albumData)
+
+        /*
+        const listOfLyricsUrl = await this.getListOfLyricsUrl(url)
+        const lyricsPromises = []
+
+
+
+        for(let lyricUrl of listOfLyricsUrl) {
+          lyricsPromises.push(this.getLyricFromUrl(lyricUrl))
+
+          //lyricsPromises.push(Promise.resolve(lyricUrl))
+        }
+
+        
+        const listOfLyrics = await Promise.allSettled(lyricsPromises)
+        */
+
+
+        break;
+      default:
+
+        break;
+    }
   }
 }
-
-exports.dir = 'jldjfjsdfjlsf';
 
 module.exports = Application
