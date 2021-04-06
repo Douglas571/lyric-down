@@ -104,7 +104,7 @@ async function createEbookWithLyrics(albumData, whereSave) {
 
     let filename = '';
     if(title) {
-      filename = title.toLowerCase().replace(' ', '-')
+      filename = title.toLowerCase().split(' ').join('-')
     } else {
       filename = 'undefined'
       console.log(listOfLyrics.indexOf(lyricData) + " not have title.")

@@ -30,10 +30,26 @@ async function read(name = 'l') {
 }
 
 async function getPage(url) {
-  const res = await got(url);
-  const { body } = res;
-  console.log('downloaded:' + url)
-  return body
+  let req = got(url)
+
+  
+  setTimeout(() => {
+    req.cancel()
+  }, 40000)
+  
+
+  try {
+    let res = await req;
+    const { body } = res;
+    console.log('downloaded:' + url)
+    return body
+  } catch(err) {
+    if(req.isCanceled) {
+      console.log('the reques is canseled and resend'.red)
+      return await getPage(url)
+    }
+  }
+
 }
 
 async function getLyric(url) {
@@ -288,7 +304,9 @@ class Application {
 
   async getAllLyrics(listOfUrl) {
     listOfUrl = listOfUrl.map( url => this.getLyricFromUrl(url))
-    return await Promise.allSettled(listOfUrl)
+    listOfUrl = await Promise.allSettled(listOfUrl)
+
+    return listOfUrl.map( result => result.value )
   }
 
   async saveAlbumOfLyrics(albumData, saveAs) {

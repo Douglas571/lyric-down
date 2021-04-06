@@ -37,9 +37,25 @@ commandLine
   .option('-glfa, --get-lyrics-from-album <name>', 'Get a lyrics of from an album')
   .option('-glfau, --get-lyrics-from-album-url <name...>', 'Get a lyrics from an album url')
   .option('-ep, --epub', 'Save the lyrics in an epub file')
+  .option('-t, --text <url>', 'download text')
 
   .option('-s, --save-in <dir>', 'Specify a dir url', app.defaultDir)
   .parse();
+
+function printState(states) {
+  const stateTable = new Table({ title: 'state of downloads' })
+  for(lyricState of states) {
+    stateTable.addRow(
+      { idx: states.indexOf(lyricState),
+        name: lyricState.name,
+        state: lyricState.this.state
+      }
+    )
+  }
+
+  console.clear()
+  stateTable.printTable()
+}
 
 (async () => {
 
@@ -64,7 +80,7 @@ commandLine
 
       let albumData = await app.getAlbumData(url)
 
-      const tableOfUrl = new Table();
+      const tableOfUrl = new Table({ title: "List of lyrics Url"});
       for(url of albumData.listOfLyrics) {
         tableOfUrl.addRow({ idx: albumData.listOfLyrics.indexOf(url), url: url.slice(0, 30)})
       }
@@ -75,14 +91,30 @@ commandLine
 
       const result = await prompt.get([
         { name: 'name', 
-          description: `Type a new name to change it`, 
-          default: albumData.name}])
+          description: `Type a new name to change it:`, 
+          default: albumData.name
+        }, 
+        {
+          name: 'artist',
+          description: `Type a new artist to change it:`,
+          default: albumData.artist
+        }])
 
       albumData.name = result.name
+      albumData.artist = result.artist
+
+      //app.on('update', states => printState(states))
 
       if(option.epub) {
         await app.saveAlbumOfLyrics(albumData, 'epub')
       }
+    }
+  }
+
+  if(option.text) {
+
+    for(let url of option.text) {
+      await app.downloadLyricsOfAlbum(url)
     }
   }
 
