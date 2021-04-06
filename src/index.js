@@ -3,13 +3,10 @@ const { stripIndents } = require('common-tags')
 const { JSDOM } = require('jsdom')
 const fs = require('fs')
 const Path = require('path')
+const os = require('os')
+const colors = require('colors')
 
-const saveEpub = require('./epub.js')
-
-
-      //const dom = new JSDOM(page)
-      //const el = dom.window.document.getElementById('lyric-body-text')
-      //console.log(JSON.stringify(el))
+const makeEpub = require('./epub.js')
 
 async function save(info) {
   const p = Date.now()
@@ -60,12 +57,29 @@ async function getLyric(url) {
 //------------------ OUT OF INTERFACE --------------------//
 
 class Application {
-  constructor(rootDir) {
-    this.rootDir = rootDir || Path.join(__dirname, '..', 'lyrics')
+  constructor(isTesting) {
+
+    this.isTesting = isTesting;
+
+    this.homedir = os.homedir()
+    this.rootDir = Path.join(this.homedir, 'my-app', 'lyrics');
+
+    if(!fs.existsSync(Path.join(this.rootDir))) {
+
+      if(!fs.existsSync(Path.join(this.homedir, 'my-app')))
+        fs.mkdirSync(Path.join(this.homedir, 'my-app'))
+
+      if(!fs.existsSync(Path.join(this.rootDir)))
+        fs.mkdirSync(this.rootDir)
+
+      if(this.isTesting) {
+        if(!fs.existsSync(Path.join(this.rootDir, 'test')))
+          fs.mkdirSync(Path.join(this.rootDir, 'test'))
+      }
+    }
   }
 
   async getLyricFromUrl(url, mock) {
-    //return await getLyric(url)
     console.log('Searching lyric from "' + url + '"...')
 
     let page;
@@ -171,7 +185,11 @@ class Application {
 
     const fileName = `${title.toLowerCase()} - ${artist.toLowerCase()}.txt`
 
-    pathWhereSave = Path.join(pathWhereSave, fileName)
+    if(this.isTesting) {
+      pathWhereSave = Path.join(this.rootDir, 'test', fileName)
+    } else {
+      pathWhereSave = Path.join(this.rootDir, fileName)
+    }
 
     return new Promise((res, rej) => {
       fs.writeFile(pathWhereSave, textToSave, (err) => {
@@ -239,48 +257,50 @@ class Application {
   }
 
   async downloadLyricsOfAlbum(url, saveAs, path) {
+    //const ask = require('prompt').start()
+
+    const albumData = await this.getAlbumData(url)
+    albumData.listOfLyrics = albumData.listOfLyrics.map( url => this.getLyricFromUrl(url))
+    albumData.listOfLyrics = await Promise.allSettled(albumData.listOfLyrics)
+    
+    //process.stdout.write('\x1Bc'); 
+    albumData.listOfLyrics = albumData.listOfLyrics.map( result => result.value )
+
+    /*
+    albumData.listOfLyrics = await search(albumData.listOfLyrics)
+    */
+
     switch(saveAs) {
       case 'text': 
         this.getLyricsFromAlbumUrl(url)
         break;
+
       case 'epub':
+        await makeEpub(albumData, this.rootDir)
+        break;
 
-         /*
-            {
-              name: String
-              artist: String
-              listOfLyrics: [lyrics]
-            }
-         */
-
-        const albumData = await this.getAlbumData(url)
-
-        albumData.listOfLyrics = albumData.listOfLyrics.map( url => this.getLyricFromUrl(url))
-        albumData.listOfLyrics = await Promise.allSettled(albumData.listOfLyrics)
-        albumData.listOfLyrics = albumData.listOfLyrics.map( result => result.value )
-
-        await saveEpub(albumData)
-
-        //console.log(albumData)
-
-        /*
-        const listOfLyricsUrl = await this.getListOfLyricsUrl(url)
-        const lyricsPromises = []
-
-
-
-        for(let lyricUrl of listOfLyricsUrl) {
-          lyricsPromises.push(this.getLyricFromUrl(lyricUrl))
-
-          //lyricsPromises.push(Promise.resolve(lyricUrl))
-        }
-
-        
-        const listOfLyrics = await Promise.allSettled(lyricsPromises)
-        */
-
+      default:
 
         break;
+    }
+  }
+
+
+  async getAllLyrics(listOfUrl) {
+    listOfUrl = listOfUrl.map( url => this.getLyricFromUrl(url))
+    return await Promise.allSettled(listOfUrl)
+  }
+
+  async saveAlbumOfLyrics(albumData, saveAs) {
+    switch(saveAs) {
+      case 'text': 
+        
+        break;
+
+      case 'epub':
+        await makeEpub(albumData, this.rootDir)
+        break;
+
       default:
 
         break;

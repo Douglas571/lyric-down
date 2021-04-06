@@ -1,5 +1,6 @@
 const { html, stripIndents } = require('common-tags')
 const Epub = require('epub-gen');
+const Path = require('path')
 const fs = require('fs')
 
 // list: [{ title: String , src: String}] -> includes the links data to paste...
@@ -82,7 +83,7 @@ function makeCustomNCX(albumData, list) {
   })
 }
 
-async function createEbookWithLyrics(albumData) {
+async function createEbookWithLyrics(albumData, whereSave) {
   const { name, artist, listOfLyrics } = albumData
 
   const epubData = {
@@ -101,7 +102,15 @@ async function createEbookWithLyrics(albumData) {
   for(let lyricData of listOfLyrics) {
     let { title, artist, lyric } = lyricData;
 
-    const filename = title.toLowerCase().replace(' ', '-')
+    let filename = '';
+    if(title) {
+      filename = title.toLowerCase().replace(' ', '-')
+    } else {
+      filename = 'undefined'
+      console.log(listOfLyrics.indexOf(lyricData) + " not have title.")
+    }
+
+    
 
     const data = `
       <div class="text-centered">
@@ -117,167 +126,7 @@ async function createEbookWithLyrics(albumData) {
   epubData.customNcxTocTemplatePath = await makeCustomNCX(albumData, listOfLinks)
   epubData.customHtmlTocTemplatePath = await makeCustonToc(albumData, listOfLinks)
 
-  new Epub(epubData, `/Users/yaquelin ramirez/Proyectos/CLI/lyrics/${name} - ${artist}.epub`);
+  new Epub(epubData, Path.join(whereSave, `${name} - ${artist}.epub`));
 }
 
 module.exports = createEbookWithLyrics;
-
-/*
-(async () => {
-
-  const albumData = 
-  {
-    name: 'Manic',
-    artist: 'Halsey',
-   
-    listOfLyrics: [
-      { title: 'Castle', artist: 'Halsey', 
-        lyric: stripIndents`Sick of all these people talking, sick of all this noise
-          Tired of all these cameras flashing, sick of being poised
-          Now my neck is open wide, begging for a fist around it
-          Already choking on my pride, so there's no use crying about it
-
-          I'm headed straight for the castle
-          They wanna make me their queen
-          And there's an old man sitting on the throne that's
-          Saying that I probably shouldn't be so mean
-          I'm headed straight for the castle
-          They’ve got the kingdom locked up
-          And there's an old man sitting on the throne that's
-          Saying I should probably keep my pretty mouth shut
-          Straight for the castle
-
-          Oh, all these minutes passing, sick of feeling used
-          If you wanna break these walls down, you’re gonna get bruised
-          Now my neck is open wide, begging for a fist around it
-          Already choking on my pride, so there's no use crying about it
-
-          Crying about it
-          Crying about it
-          Crying about it
-
-          I'm headed straight for the castle
-          They wanna make me their queen
-          And there's an old man sitting on the throne that's
-          Saying that I probably shouldn't be so mean
-          I'm headed straight for the castle
-          They’ve got the kingdom locked up
-          And there's an old man sitting on the throne that's
-          Saying I should probably keep my pretty mouth shut
-          Straight for the castle
-
-          There's no use crying about it
-          There's no use crying about it
-          There's no use crying about it
-          There's no use crying about it
-
-          I'm headed straight for the castle
-          They wanna make me their queen
-          And there's an old man sitting on the throne that's
-          Saying that I probably shouldn't be so mean
-          I'm headed straight for the castle
-          They’ve got the kingdom locked up
-          And there's an old man sitting on the throne that's
-          Saying I should probably keep my pretty mouth shut
-
-          Straight for the castle
-          They wanna make me their queen
-          And there's an old man sitting on the throne that's
-          Saying that I probably shouldn't be so mean
-          I'm headed straight for the castle
-          They’ve got the kingdom locked up
-          And there's an old man sitting on the throne that's
-          Saying I should probably keep my pretty mouth shut
-
-          Straight for the castle`
-      },
-      { 
-        title: 'New Americana', 
-        artist: 'Halsey', 
-        lyric: stripIndents`Cigarettes and tiny liquor bottles, just what you’d expect inside her new Balenciaga
-          Bad romance, turned dreams into an empire
-          Self-made success now she rose with Rockafellas
-
-          Survival of the richest, the city’s ours until the fall
-          They're Monaco and Hamptons bound but we don’t feel like outsiders at all
-
-          We are the new Americana
-          High on legal marijuana
-          Raised on Biggie and Nirvana
-          We are the new Americana
-
-          Young James Dean, some say he looks just like his father, but he could never love somebody’s daughter
-          Football team loved more than just the game so he vowed to be his husband at the altar
-
-          Survival of the richest, the city’s ours until the fall
-          They’re Monaco and Hamptons bound but we don’t feel like outsiders at all
-
-          We are the new Americana
-          High on legal marijuana
-          Raised on Biggie and Nirvana
-          We are the new Americana
-
-          We know very well who we are, so we hold it down when summer starts
-          What kind of dough have you been spending?
-          What kind of bubblegum have you been blowing lately?
-
-          We are the new Americana
-          High on legal marijuana
-          Raised on Biggie and Nirvana
-          We are the new Americana
-          We are the new Americana (we know very well)
-          High on legal marijuana (who we are)
-          Raised on Biggie and Nirvana (so we hold it down)
-          We are the new Americana`
-      },
-      { 
-        title: 'Drive', 
-        artist: 'Halsey', 
-        lyric: stripIndents`My hands wrapped around your stick shift
-          Swerving on the 405, I can never keep my eyes off this
-          My neck, the feeling of your soft lips
-          Illuminated in the light, bouncing off the exit signs I missed
-
-          All we do is drive
-          All we do is think about the feelings that we hide
-          All we do is sit in silence waiting for a sign
-          Sick and full of pride
-          All we do is drive
-
-          And California never felt like home to me
-          And California never felt like home
-          And California never felt like home to me
-          Until I had you on the open road and now we're singing
-
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah
-
-          Your laugh, echoes down the hallway
-          Carves into my hollow chest, spreads over the emptiness
-          It's bliss
-          It's so simple but we can't stay
-          Over analyze again, would it really kill you if we kissed
-
-          All we do is drive
-          All we do is think about the feelings that we hide
-          All we do is sit in silence waiting for a sign
-          Sick and full of pride
-          All we do is drive
-
-          And California never felt like home to me
-          And California never felt like home
-          And California never felt like home to me
-          Until I had you on the open road and I was singing
-
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah
-          Ah, ah, ah, ah, ah`
-      }
-    ]
-  }
-
-  await createEbookWithLyrics(albumData)
-})();*/

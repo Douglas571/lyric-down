@@ -4,9 +4,11 @@ const Application = require('./index.js')
 
 const path = require('path')
 
-const app = new Application()
 
+const app = new Application(true)
 describe('Application main cases', async () => {
+  //await app.start()
+
   
   it('should return the lyric data from an url', async  function() {
     //this.skip()
@@ -47,6 +49,7 @@ describe('Application main cases', async () => {
   })
   
   it('Should return the desired string formated from lyric data', async function() {
+    //this.skip()
     const lyricData = {
       title: 'Castle',
       album: 'Badlands',
@@ -54,7 +57,7 @@ describe('Application main cases', async () => {
       lyric: 'Some Lyric...',
       url: 'https://www.lyrics.com/lyric/33061922/Castle'
     }
-
+   
     const expectedText = 
       stripIndents`"Castle" from "Badlands"
                   by Halsey, Alanis & Lauren J.
@@ -104,6 +107,6 @@ describe('Application main cases', async () => {
   })
 
   it('Should return the text of the lyric pre-saved', async function() {
-
+    //this.skip()
   })
 })
