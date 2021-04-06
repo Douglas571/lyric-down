@@ -73,8 +73,8 @@ function makeCustomNCX(albumData, list) {
           </navPoint>
       </navMap>
   </ncx>
-  `
-  console.log(ncx)
+  `;
+  
   return new Promise((res, rej) => {
     fs.writeFile('C:/Users/yaquelin ramirez/Proyectos/CLI/temp/toc.ncx', ncx, err => {
       if(err) console.log(err)
