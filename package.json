@@ -4,8 +4,9 @@
   "description": "a command line app",
   "main": "index.js",
   "scripts": {
-    "test": "mocha src/ --timeout=9999999999 -w",
-    "start": "node index.js"
+    "test": "mocha src/ --timeout=9999999999 --recursive --diff -w ",
+    "start": "node index.js",
+    "doc": "jsdoc src/ -d doc/"
   },
   "author": "Douglas Socorro",
   "license": "ISC",
@@ -23,7 +24,8 @@
     "jsdom": "^16.5.2",
     "nodepub": "^3.0.1",
     "prompt": "^1.1.0",
-    "vorpal": "^1.12.0"
+    "vorpal": "^1.12.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "chai": "^4.3.4",
