@@ -2,14 +2,13 @@ const got = require('got')
 const fs = require('fs')
 const path = require('path')
 
-async function getPage(url) {
+async function getHtml(url) {
   let req = got(url)
   
   setTimeout(() => {
     req.cancel()
-  }, 40000)
+  }, 15000)
   
-
   try {
     let res = await req;
     const { body } = res;
@@ -17,15 +16,24 @@ async function getPage(url) {
     return body
   } catch(err) {
     if(req.isCanceled) {
-      console.log('the reques is canseled and resend'.red)
-      return await getPage(url)
+      console.log('the reques is canseled and resend:'.red + url)
+      return await getHtml(url)
     }
   }
-
 }
 
-function readPage(file) {
+exports.getHtml = getHtml;
+
+exports.getMultipleHtmlFiles = async function(listOfUrl) {
+  const listOfPromises = listOfUrl.map( url => getHtml(url))
+  const listOfResults = await Promise.allSettled(listOfPromises)
+  const listOfHtml = listOfResults.map(({ value }) => value)
+
+  return listOfHtml.map((html, idx) => {
+    return { html, url: listOfUrl[idx]}
+  });
+}
+
+exports.readPage = function (file) {
   return fs.readFileSync(file, 'utf-8')
 }
-
-module.exports = { readPage }

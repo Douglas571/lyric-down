@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom')
 
-exports.extractLyricData = function (html, knownInfo = {}) {
+exports.extractLyricData = async function (html, knownInfo = {}) {
   const page = JSDOM.fragment(html)
 
   let url = ''
@@ -16,6 +16,8 @@ exports.extractLyricData = function (html, knownInfo = {}) {
   } else {
     url = page.querySelector('meta[property="al:web:url"]').getAttribute('content')
   }
+
+  console.log(url)
 
   if(knownInfo.track !== undefined) {
     track = knownInfo.track
@@ -47,6 +49,7 @@ exports.extractLyricData = function (html, knownInfo = {}) {
   if(knownInfo.album) {
     album = knownInfo.album
   } else {
+    console.log(title)
     album = page.querySelector('h2.mui-cell__title').textContent
   }
 
@@ -56,8 +59,11 @@ exports.extractLyricData = function (html, knownInfo = {}) {
   } else {
     let parts = page.querySelectorAll('p.mxm-lyrics__content')
 
-    lyric += parts[0].textContent + '\n'
-    lyric += parts[1].textContent
+    parts.forEach( part => {
+      lyric += part.textContent + '\n'
+    })
+
+    lyric = lyric.slice(0, lyric.lastIndexOf('\n'))
   }
 
   return {

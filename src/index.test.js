@@ -2,10 +2,17 @@ const { expect } = require('chai')
 const { stripIndents } = require('common-tags')
 const Application = require('./index.js')
 
+const util = require('./util.js')
+const mxm = require('./scrapers/musixmatch.js')
+const fse = require('fs-extra')
+
 const path = require('path')
 
+const makeEpub = require('./saviors/epub.js')
+const os = require('os')
+
 const app = new Application(true)
-describe('Application main cases', async () => {
+describe.skip('Application main cases', async () => {
   //await app.start()
 
   
@@ -131,73 +138,60 @@ describe('Application main cases', async () => {
   })
 })
 
-describe('App use case', async () => {
-  it('Download an Album of lyrics and save epub', async () => {
-    
-    const expectedAlbum = {
-      url: 'https://www.lyrics.com/album/3377676/Room-93%3A-The-Remixes-%5BLP%5D',
-      name: 'Room 93: The Remixes [LP] Album',
-      artist: 'Halsey',
+
+const Epub = require('epub-gen');
+describe.only('App use case', async () => {
+  it('Should return the album and lyrics data from "musixmatch"', async () => {
+    const expectedData = {
+      url: 'https://www.musixmatch.com/es/album/Conan-Gray/Checkmate',
+      name: 'Kid Krow',
+      artist: 'Conan Gray',
       lyricsToDownload: [
-        { track: 1, 
-          title: 'Is There Somewhere', 
-          url: 'https://www.lyrics.com/lyric/33123631/Is+There+Somewhere', 
-          state: 1 
-        },
-        { track: 2, 
-          title: 'Ghost', 
-          url: 'https://www.lyrics.com/lyric/33123630/Ghost', 
-          state: 1 
-        },
-        { track: 3, 
-          title: 'Hurricane', 
-          url: 'https://www.lyrics.com/lyric/33123629/Hurricane', 
-          state: 1 
-        },
-        { track: 4, 
-          title: 'Empty Gold', 
-          url: 'https://www.lyrics.com/lyric/33123628/Empty+Gold', 
-          state: 1 
-        },
-        { track: 5, 
-          title: 'Trouble', 
-          url: 'https://www.lyrics.com/lyric/33123627/Trouble', 
-          state: 1
-        }],
+        { state: 1, track: 1, title: 'Checkmate', url: 'https://www.musixmatch.com/es/letras/Conan-Gray/Checkmate' },
+        { state: 1, track: 4, title: 'Maniac', url: 'https://www.musixmatch.com/es/letras/Conan-Gray/Maniac' },
+        { state: 1, track: 10, title: '(Can We Be Friends?)', url: 'https://www.musixmatch.com/es/letras/Conan-Gray/Can-We-Be-Friends'}
+      ]
     }
 
-    let resivedAlbum = await app.getAlbumData(expectedAlbum.url, 'album')
-    console.log(resivedAlbum.lyricsToDownload)
-    //resivedAlbum = await app.getLyricsOfAlbum(resivedAlbum)
+    console.log('searching album...')
+    const html = await util.getHtml('https://www.musixmatch.com/es/album/Conan-Gray/Checkmate')
 
-    expect(resivedAlbum.name).to.be.equal(expectedAlbum.name)
-    expect(resivedAlbum.artist).to.be.equal(expectedAlbum.artist)
-    expect(resivedAlbum.lyricsToDownload).to.be.equal(expectedAlbum.lyricsToDownload)
+    console.log('extracting album data...')
+    const resivedData = mxm.extractAlbumData(html)
 
-    //expect(resivedAlbum.lyrics).to.be.deep.equal(expectedAlbum.lyrics)
+    expect(resivedData.name).to.be.equal(expectedData.name)
+    expect(resivedData.url).to.be.equal(expectedData.url)
+    expect(resivedData.aritst).to.be.equal(expectedData.aritst)
 
-    const expectedListOfLyrics = 
-    [
-      { track: 1, 
-          title: 'Is There Somewhere', 
-          url: 'https://www.lyrics.com/lyric/33123631/Is+There+Somewhere'
-        },
-        { track: 2, 
-          title: 'Ghost', 
-          url: 'https://www.lyrics.com/lyric/33123630/Ghost' 
-        },
-        { track: 3, 
-          title: 'Hurricane', 
-          url: 'https://www.lyrics.com/lyric/33123629/Hurricane'
-        },
-        { track: 4, 
-          title: 'Empty Gold', 
-          url: 'https://www.lyrics.com/lyric/33123628/Empty+Gold'
-        },
-        { track: 5, 
-          title: 'Trouble', 
-          url: 'https://www.lyrics.com/lyric/33123627/Trouble'
-        }
-    ];
+    expect(resivedData.lyricsToDownload[0]).to.be.deep.equal(expectedData.lyricsToDownload[0])
+    expect(resivedData.lyricsToDownload[3]).to.be.deep.equal(expectedData.lyricsToDownload[1])
+    expect(resivedData.lyricsToDownload[9]).to.be.deep.equal(expectedData.lyricsToDownload[2])
+    
+    const listOfUrl = resivedData.lyricsToDownload.map(({ url }) => url)
+    const listOfHtmls = await util.getMultipleHtmlFiles(listOfUrl)
+    const proLyrics = listOfHtmls.map(async ({ html, url }, idx) => mxm.extractLyricData(html, { track: (idx + 1), url, album: resivedData.name}))
+    const result = await Promise.allSettled(proLyrics)
+    resivedData.lyrics = result.map(({ value }) => value)
+
+
+    fse.outputFile(`${resivedData.name} - ${resivedData.artist}.json`, JSON.stringify(resivedData), err => {
+      if(err) console.log(err.message)
+      else {
+        console.log('success!!!')
+      }
+
+      const epubData = {
+        title: resivedData.name,
+        author: resivedData.artist,
+        tocTitle: 'List of Songs from ' + resivedData.name + ' album:',
+        content: [],
+      }
+
+      for(let lyric of resivedData.lyrics) {
+        epubData.content.push({ title: lyric.title, data: `by ${lyric.artist}\n\n${lyric.lyric}`})
+      }
+
+      new Epub(epubData, path.join(os.homedir(), 'my-app', `${resivedData.name} - ${resivedData.artist}.epub`))
+    })    
   })
 })

@@ -2,6 +2,7 @@ const { html, stripIndents } = require('common-tags')
 const Epub = require('epub-gen');
 const Path = require('path')
 const fs = require('fs')
+const os = require('os')
 
 // list: [{ title: String , src: String}] -> includes the links data to paste...
 // return: String -> path where saved the template...
@@ -33,9 +34,9 @@ function makeCustonToc(albumData, list) {
   `
   //console.log(toc)
   return new Promise((res, rej) => {
-    fs.writeFile('C:/Users/yaquelin ramirez/Proyectos/CLI/temp/toc.xhtml', toc, err => {
+    fs.writeFile(Path.join(os.homedir(), 'my-app/lyrics/temp/toc.xhtml'), toc, err => {
       if(err) console.log(err)
-      res('C:/Users/yaquelin ramirez/Proyectos/CLI/temp/toc.xhtml');
+      res(Path.join(os.homedir(), 'my-app/lyrics/temp/toc.xhtml'));
     })
   })
 }
@@ -76,15 +77,16 @@ function makeCustomNCX(albumData, list) {
   `;
   
   return new Promise((res, rej) => {
-    fs.writeFile('C:/Users/yaquelin ramirez/Proyectos/CLI/temp/toc.ncx', ncx, err => {
+    fs.writeFile(Path.join(os.homedir(), 'my-app/lyrics/temp/toc.ncx'), ncx, err => {
       if(err) console.log(err)
-      res('C:/Users/yaquelin ramirez/Proyectos/CLI/temp/toc.ncx');
+      res(Path.join(os.homedir(), 'my-app/lyrics/temp/toc.ncx'));
     })
   })
 }
 
 async function createEbookWithLyrics(albumData, whereSave) {
-  const { name, artist, listOfLyrics } = albumData
+  console.log('here1')
+  const { name, artist, lyrics } = albumData
 
   const epubData = {
     title: name,
@@ -99,18 +101,22 @@ async function createEbookWithLyrics(albumData, whereSave) {
 
   const listOfLinks = []
 
-  for(let lyricData of listOfLyrics) {
-    let { title, artist, lyric } = lyricData;
+  for(let oneLyric of lyrics) {
+
+    let { title, artist, lyric } = oneLyric;
 
     let filename = '';
+
     if(title) {
       filename = title.toLowerCase().split(' ').join('-')
+
     } else {
       filename = 'undefined'
-      console.log(listOfLyrics.indexOf(lyricData) + " not have title.")
+      console.log(title)
+      console.log(lyrics.indexOf(oneLyric) + " not have title.")
     }
 
-    
+    console.log('here 2')
 
     const data = `
       <div class="text-centered">
@@ -125,8 +131,11 @@ async function createEbookWithLyrics(albumData, whereSave) {
 
   epubData.customNcxTocTemplatePath = await makeCustomNCX(albumData, listOfLinks)
   epubData.customHtmlTocTemplatePath = await makeCustonToc(albumData, listOfLinks)
+  console.log('here 3')
 
-  new Epub(epubData, Path.join(whereSave, `${name} - ${artist}.epub`));
+  const path = Path.join(whereSave, `${name} - ${artist}.epub`)
+  console.log(path)
+  new Epub(epubData, path);
 }
 
 module.exports = createEbookWithLyrics;

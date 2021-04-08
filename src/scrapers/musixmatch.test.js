@@ -3,10 +3,10 @@ const path = require('path')
 const { expect } = require('chai')
 const { stripIndents } = require('common-tags')
 
-const util = require('./util.js')
-const mms = require('./musixmatch-scraper');
+const util = require('../util.js')
+const mms = require('./musixmatch.js');
 
-describe.only('Musixmatch scraper use case', async () => {
+describe('Musixmatch scraper use case', async () => {
   it('Should extract the lyric data from html file', async () => {
 
     const expectedData = {
@@ -57,7 +57,7 @@ describe.only('Musixmatch scraper use case', async () => {
               I miss you more than life`,
     };
 
-    const html = util.readPage(path.join(__dirname, '../test-files', 'mms-l1.html'))
+    const html = util.readPage(path.join(__dirname, 'test-files', 'mms-l1.html'))
 
     expect(html).to.be.a('string')
 
@@ -156,7 +156,7 @@ describe.only('Musixmatch scraper use case', async () => {
 
     }
 
-    const html = util.readPage(path.join(__dirname, '../test-files', 'mms-l2.html'))
+    const html = util.readPage(path.join(__dirname, 'test-files', 'mms-l2.html'))
     let resivedData = mms.extractLyricData(html)
 
     //Most important test
@@ -296,7 +296,7 @@ describe.only('Musixmatch scraper use case', async () => {
       ]
     }
 
-    const html = util.readPage(path.join(__dirname, '../test-files', 'mms-a2.html'))
+    const html = util.readPage(path.join(__dirname, 'test-files', 'mms-a2.html'))
 
     const resivedData = mms.extractAlbumData(html)
 

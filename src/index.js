@@ -1,3 +1,4 @@
+const colors = require('colors')
 const got = require('got')
 const { stripIndents } = require('common-tags')
 const { JSDOM } = require('jsdom')
@@ -5,7 +6,6 @@ const fs = require('fs')
 const fse = require('fs-extra')
 const Path = require('path')
 const os = require('os')
-const colors = require('colors')
 
 const makeEpub = require('./epub.js')
 
