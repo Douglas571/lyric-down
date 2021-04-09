@@ -1,19 +1,26 @@
 const Winston = require('winston');
 const path = require('path');
+const fse = require('fs-extra')
+const os = require('os')
 
-function getLogger(rootDir, logFolder = 'log') {
+const defaultDir = path.join(os.homedir(), 'my-app')
 
-  const filename = path.join(rootDir, logFolder, 'loggin.txt')
+function getLogger(rootDir = defaultDir, logFolder = 'log') {
+
+  const logDir = path.join(rootDir, logFolder)
+  const filename = path.join(logDir, 'loggin.txt')
+
+  fse.ensureDirSync(logDir)
 
   const logger = Winston.createLogger({
-    tranports: [
-      new Winston.tranports.Console(),
-      new Winston.tranports.File({ filename })
+    transports: [
+      //new Winston.transports.Console(),
+      new Winston.transports.File({ filename })
     ],
   });
 
-  return 
+  return logger
 }
 
 
-module.exports = getLogger;
+exports.getInstance = getLogger

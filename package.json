@@ -1,12 +1,15 @@
 {
   "name": "cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "a command line app",
   "main": "index.js",
   "scripts": {
     "test": "mocha src/ --timeout=9999999999 --recursive --diff -w ",
     "start": "node index.js",
     "doc": "jsdoc src/ -d doc/"
+  },
+  "bin": {
+    "lg": "./cli.js"
   },
   "author": "Douglas Socorro",
   "license": "ISC",

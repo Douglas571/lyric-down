@@ -17,8 +17,6 @@ exports.extractLyricData = async function (html, knownInfo = {}) {
     url = page.querySelector('meta[property="al:web:url"]').getAttribute('content')
   }
 
-  console.log(url)
-
   if(knownInfo.track !== undefined) {
     track = knownInfo.track
 
@@ -49,7 +47,6 @@ exports.extractLyricData = async function (html, knownInfo = {}) {
   if(knownInfo.album) {
     album = knownInfo.album
   } else {
-    console.log(title)
     album = page.querySelector('h2.mui-cell__title').textContent
   }
 

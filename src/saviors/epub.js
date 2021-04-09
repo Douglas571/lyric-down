@@ -84,9 +84,20 @@ function makeCustomNCX(albumData, list) {
   })
 }
 
+function formatMultipleArtist(list) {
+  if(list.length > 1) {
+    let text = list.join(', ')
+    const whereSlice = text.lastIndexOf(', ')
+    text = text.slice(0, whereSlice) + ' & ' + text.slice(whereSlice + 2)
+    return text
+
+  } else {
+    return list
+  }
+}
+
 async function createEbookWithLyrics(albumData, whereSave) {
-  console.log('here1')
-  const { name, artist, lyrics } = albumData
+  const { name, artist, lyrics, url } = albumData
 
   const epubData = {
     title: name,
@@ -108,7 +119,8 @@ async function createEbookWithLyrics(albumData, whereSave) {
     let filename = '';
 
     if(title) {
-      filename = title.toLowerCase().split(' ').join('-')
+      const lyricTitle = title.split('//').join(' ').trim()
+      filename = lyricTitle.toLowerCase().split(' ').join('-')
 
     } else {
       filename = 'undefined'
@@ -116,13 +128,13 @@ async function createEbookWithLyrics(albumData, whereSave) {
       console.log(lyrics.indexOf(oneLyric) + " not have title.")
     }
 
-    console.log('here 2')
-
     const data = `
       <div class="text-centered">
         <h2 class="lyric-title">${title}</h2>
-        <h3 class="artist">by ${artist}</h3>
+        <h3 class="artist">by ${formatMultipleArtist(artist)}</h3>
         <p>${lyric.split('\n').join('</br>')}</p>
+        </br>
+        <p><a href="${url}">source</a></p>
       <div>`;
 
     epubData.content.push({ data, filename });
@@ -131,10 +143,10 @@ async function createEbookWithLyrics(albumData, whereSave) {
 
   epubData.customNcxTocTemplatePath = await makeCustomNCX(albumData, listOfLinks)
   epubData.customHtmlTocTemplatePath = await makeCustonToc(albumData, listOfLinks)
-  console.log('here 3')
 
-  const path = Path.join(whereSave, `${name} - ${artist}.epub`)
-  console.log(path)
+  const lyricArtist = artist.split('//').join(' ').trim()
+  const path = Path.join(whereSave, `${name} - ${lyricArtist}.epub`)
+  
   new Epub(epubData, path);
 }
 

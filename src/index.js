@@ -7,79 +7,26 @@ const fse = require('fs-extra')
 const Path = require('path')
 const os = require('os')
 
-const makeEpub = require('./epub.js')
+const util = require('./util.js')
+const logger = require('./logger.js').getInstance()
+const lyricsScraper = require('./scrapers/lyrics.js')
+const mxmScraper = require('./scrapers/musixmatch.js')
 
-async function save(info) {
-  const p = Date.now()
+const makeEpub = require('./saviors/epub.js')
+const textSavior = require('./saviors/text.js')
 
-  fs.writeFile(`lyrics\\l.html`, info, (err) => {
-    if(err) {
-      console.log(err.message)
-    } else {
-      console.log('saved :V ' + `lyrics\\${title}-${artist}.html`)
-    }
-  })
-}
-
-async function read(name = 'l') {
-  return new Promise((resolve) => {
-    fs.readFile(`${name}.html`, 'utf-8', (err, text) => {
-      if(err)  console.log(err.message);
-      resolve(text);
-    });
-  })
-}
-
-async function getPage(url) {
-  let req = got(url)
-
-  
-  setTimeout(() => {
-    req.cancel()
-  }, 40000)
-  
-
-  try {
-    let res = await req;
-    const { body } = res;
-    console.log('downloaded:' + url)
-    return body
-  } catch(err) {
-    if(req.isCanceled) {
-      console.log('the reques is canseled and resend'.red)
-      return await getPage(url)
-    }
-  }
-
-}
-
-async function getLyric(url) {
-  console.log('Searching lyric from "' + url + '"...')
-  const page = await getPage(url)//await getLyric(url)
-
-  const frag = JSDOM.fragment(page)
-
-  const title  = frag.querySelector('#lyric-title-text').textContent
-  const album  = frag.querySelector('div.falbum h3 a').textContent
-  const artist = frag.querySelector('#lyric-title-text ~ h3.lyric-artist a').textContent
-  const lyric  = frag.querySelector('#lyric-body-text').textContent
-
-  let lyricToSave = '"' + title + '" from "' + album + '"\n' + ' by ' + artist + '\n\n' + lyric + '\n\n';
-  lyricToSave += 'extracted from: ' + url;
-  
-
-  save(lyricToSave, title, artist)
-}
+const EventEmiter = require('events')
 
 //------------------ OUT OF INTERFACE --------------------//
 
 /**
- * Create a new Aplication
+ * Create a new Aplication instance.
  * @class
  * @param {boolean} isTesting - Activate test mode
  */
-class Application {
+class Application extends EventEmiter{
   constructor(isTesting) {
+    super()
 
     this.STATES = {
       REMOVED: 0,
@@ -97,230 +44,119 @@ class Application {
       fse.ensureDirSync(Path.join(this.rootDir, 'test'))
     }
   }
-  
-  async getLyricFromUrl(url, mock) {
-    console.log('Searching lyric from "' + url + '"...')
 
-    let page;
+  getScraper(url) {
+    let scraper
+    if(url.startsWith('https://www.lyrics.com/')) {
+      scraper = lyricsScraper
 
-    if(mock) {
-      page = await read(Path.join('test-files', mock))
+    } else if(url.startsWith('https://www.musixmatch.com/')) {
+      scraper = mxmScraper
+
     } else {
-      page = await getPage(url)//await getLyric(url)
+      const err = new Error('Unknow host, can\'t extract info from there.')
+      logger.error(err, { url })
+
+      throw err
     }
 
-    
+    return scraper
+  }
+  
+  async getLyric(url, knownInfo) {
+    let scraper = this.getScraper(url)
 
-    const frag = JSDOM.fragment(page)
-
-    const title  = frag.querySelector('#lyric-title-text').textContent
-    const album  = frag.querySelector('div.falbum h3 a').textContent
-
-    let listOfArtist = frag.querySelectorAll('#lyric-title-text ~ h3.lyric-artist a')
-    let artist = []
-
-    listOfArtist.forEach( link => {
-      artist.push(link.textContent)
-    })
-
-    artist = artist.slice(0, artist.length - 1)
-
-    artist = (artist.length == 1) ? artist[0] : artist;
-
-    const lyric  = frag.querySelector('#lyric-body-text').textContent
-
-    const lyricData = {
-      title,
-      album,
-      artist,
-      lyric,
-      url
-    }
-
-    console.log('page: "' + url + '" download')      
+    const html = await util.getHtml(url)
+    const lyricData = await scraper.extractLyricData(html)
 
     return lyricData
   }
 
-  async getLyricsFromAlbumUrl(url) {
-    const listOfLyricsUrl = await this.getListOfLyricsUrl(url)
-    console.log('Downloading "' + listOfLyricsUrl.length + '" lyrics')
+  async getAlbum(url, knownInfo) {
+    const page = await util.getHtml(url)
 
-    for(let url of listOfLyricsUrl) {
-      this.downloadLyricFromUrl(url)
-    }
-  }
+    let scraper
+    let host
+    if(url.startsWith('https://www.lyrics.com/')) {
+      scraper = lyricsScraper
+      host = 'https://www.lyrics.com/'
 
-  async getListOfLyricsUrl(albumUrl) {
-    console.log('searching album: "' + albumUrl + '"...')
-    const html = await getPage(albumUrl)
-    const page = JSDOM.fragment(html)
+    } else if(url.startsWith('https://www.musixmatch.com/')) {
+      scraper = mxmScraper
+      host = 'https://www.musixmatch.com/'
 
-    const whereSlice = albumUrl.lastIndexOf('com/')
-    const host = albumUrl.slice(0, whereSlice + 3)
-
-    const links = page.querySelectorAll('tbody tr td div strong a')
-    const listOfUrl = []
-
-    links.forEach( link => {
-      let url = host + link.getAttribute('href')
-      listOfUrl.push(url)
-    })
-
-    //console.log(listOfUrl)
-
-    return listOfUrl
-  }
-
-  formatData({ title, album, artist, lyric, url }) {
-
-    if(Array.isArray(artist)) {
-      if(artist.length == 2) artist = artist.join(' & ')
-      else if(artist.length > 2) {
-        artist = artist.join(', ')
-
-        const lastComma = artist.lastIndexOf(',')
-        const partOne = artist.slice(0, lastComma)
-        const partTwe = artist.slice(lastComma + 1)
-
-        artist = [partOne, partTwe].join(' &')
-      }
-    }
-
-    let textToSave = `"${title}" from "${album}"\n`
-       textToSave += `by ${artist}\n\n`
-       textToSave += `${lyric}\n\n`
-       textToSave += `extracted from: "${url}"`
-
-    return textToSave
-  }
-
-  async saveLyric(lyricData, pathWhereSave = this.rootDir) {
-    const textToSave = this.formatData(lyricData)
-    let { title, artist } = lyricData
-
-    if(Array.isArray(artist)) artist = artist[0]
-
-    const fileName = `${title.toLowerCase()} - ${artist.toLowerCase()}.txt`
-
-    if(this.isTesting) {
-      pathWhereSave = Path.join(this.rootDir, 'test', fileName)
     } else {
-      pathWhereSave = Path.join(this.rootDir, fileName)
+      const err = new Error('Unknow host, can\'t extract info from there.')
+      logger.error(err, { url })
+
+      throw err
     }
 
-    return new Promise((res, rej) => {
-      fs.writeFile(pathWhereSave, textToSave, (err) => {
-        if(err) {
-          console.log(err.message)
-          rej(err)
-        }
+    const albumData = await scraper.extractAlbumData(page)
+    albumData.host = host
+    return albumData
+  }
+
+  async getLyricsOfAlbum(albumData) {
+    const listOfUrl = albumData.lyricsToDownload.map(({ url }) => url)
+    const listOfHtmls = await util.getMultipleHtmlFiles(listOfUrl)
+    
+    const scraper = this.getScraper(albumData.host)
+    
+    let listOfLyrics = listOfHtmls
+      .map(({ html, url }, idx) => 
+        scraper
+          .extractLyricData(html, { 
+            track: (idx + 1),
+            album: albumData.name,
+            url
+          })
+      )
+    
+    listOfLyrics = await Promise.allSettled(listOfLyrics)
+    listOfLyrics = listOfLyrics.map(({ value }) => value)
+
+    return listOfLyrics
+
+  }
+
+//------------------- APP SAVIORS ----------------------//
+
+  async saveLyric(lyric, format) {
+  }
+
+  /**
+   * Ensure a folder with the name of the album
+   * and save individual lyrics in text files.
+   * @param {Album} albumData - The full data of the album
+   * that will be save.
+   * @param {Options} options - Options for saving the album.
+   */
+  async saveAlbum(albumData, { format }) {
+    switch(format) {
+      case 'text': 
+        this._saveAlbumInTextFormat(albumData)
+        break;
+
+      case 'epub': 
+        this._saveAlbumInEpubFormat(albumData)
+        break;
         
-        res(pathWhereSave)
-      })
-    })
+      default:
+        break;
+    }    
   }
 
-  async readLyric(path) {
-    return new Promise((res, rej) => {
-      fs.readFile(path, 'utf-8', (err, text) => {
-        if(err) {
-          console.log(err.message)
-          rej(err)
-        }
-
-        res(text)
-      })
-    })
+  async _saveAlbumInTextFormat(albumData) {
+    textSavior.saveAlbum(albumData, this.rootDir)
   }
 
-  async getAlbumData(albumUrl, test = false) {
-    let name = '';
-    let artist = '';
-    let listOfLyrics = [];
-
-    //download de page
-    console.log('searching album: "' + albumUrl + '"...')
-    let html = '';
-
-    if(test) {
-      html = await read(Path.join('/test-files', test))
-      console.log(html)
-    } else {
-      html = await getPage(albumUrl)
-    }
-
-    const page = JSDOM.fragment(html)
-
-    //parse name
-    name = page.querySelector('hgroup.hg1p23 h1 strong').textContent
-    //parse artist
-    artist = page.querySelector('hgroup.hg1p23 h2').textContent
-
-    //parse list of lyrics
-    const rows = page.querySelectorAll('tbody tr')
-
-    const whereSlice = albumUrl.lastIndexOf('com/')
-    const host = albumUrl.slice(0, whereSlice + 3)
-    for( let node of rows ) {
-      const track = Number(node.querySelector(':nth-child(1)').textContent);
-      const title = node.querySelector(':nth-child(2)').textContent;
-      const url = host + node.querySelector(':nth-child(2) div strong a').getAttribute('href');
-      const state = this.STATES.TO_DOWNLOAD;
-
-      listOfLyrics.push({ track, title, state, url })
-    }
-
-    return {
-      name,
-      artist,
-      lyricsToDownload: listOfLyrics,
-      url: albumUrl
-    }
+  async _saveAlbumInEpubFormat(albumData) {
+    makeEpub(albumData, this.rootDir)
   }
 
 //------------------- APP USER INTERFACE ----------------------//
 
-  async downloadLyricFromUrl(url, pathWhereSave) {
-    const lyricData = await this.getLyricFromUrl(url)
-    const pathFile = await this.saveLyric(lyricData)
-    console.log(Path.basename(pathFile) + "saved in: " + pathFile)
-  }
-
-  async downloadLyricsOfAlbum(url, saveAs, path) {
-
-    const albumData = await this.getAlbumData(url)
-    albumData.listOfLyrics = albumData.listOfLyrics.map( url => this.getLyricFromUrl(url))
-    albumData.listOfLyrics = await Promise.allSettled(albumData.listOfLyrics)
-    
-    albumData.listOfLyrics = albumData.listOfLyrics.map( result => result.value )
-
-    /*
-    albumData.listOfLyrics = await search(albumData.listOfLyrics)
-    */
-
-    switch(saveAs) {
-      case 'text': 
-        this.getLyricsFromAlbumUrl(url)
-        break;
-
-      case 'epub':
-        await makeEpub(albumData, this.rootDir)
-        break;
-
-      default:
-
-        break;
-    }
-  }
-
-  /** Function to get all Lyrics */
-  async getAllLyrics(listOfLyrics) {
-    listOfLyrics = listOfLyrics.map( lyric => this.getLyricFromUrl(lyric.url))
-    listOfLyrics = await Promise.allSettled(listOfUrl)
-
-    return listOfLyrics.map( result => result.value )
-  }
 
   /** 
    * A function that choise how save the lyrics.
