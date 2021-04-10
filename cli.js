@@ -64,6 +64,8 @@ process.on('uncaughtException', (err, org) => {
 
     logger.info('returned lyrics', { lyrics: albumData.lyrics })
 
-    await app.saveAlbum(albumData, { format })
+    let paths = await app.saveAlbum(albumData, { format })
+    console.log('saved files')
+    console.log(paths)
   }
 })();

@@ -11,11 +11,11 @@ const path = require('path')
 const makeEpub = require('./saviors/epub.js')
 const os = require('os')
 
-const app = new Application(true)
-describe.skip('Application main cases', async () => {
-  //await app.start()
 
-  
+describe('Application main cases', async () => {
+  //await app.start()
+  const app = new Application(true)
+    
   it('should return the lyric data from an url', async  function() {
     //this.skip()
     const expectedData = 
@@ -140,8 +140,10 @@ describe.skip('Application main cases', async () => {
 
 
 const Epub = require('epub-gen');
-describe.only('App use case', async () => {
-  it('Should return the album and lyrics data from "musixmatch"', async () => {
+describe.only('Application', async () => {
+  const app = new Application(true)
+
+  it.skip('Should return the album and lyrics data from "musixmatch"', async () => {
     const expectedData = {
       url: 'https://www.musixmatch.com/es/album/Conan-Gray/Checkmate',
       name: 'Kid Krow',
@@ -163,9 +165,7 @@ describe.only('App use case', async () => {
     expect(resivedData.url).to.be.equal(expectedData.url)
     expect(resivedData.aritst).to.be.equal(expectedData.aritst)
 
-    expect(resivedData.lyricsToDownload[0]).to.be.deep.equal(expectedData.lyricsToDownload[0])
-    expect(resivedData.lyricsToDownload[3]).to.be.deep.equal(expectedData.lyricsToDownload[1])
-    expect(resivedData.lyricsToDownload[9]).to.be.deep.equal(expectedData.lyricsToDownload[2])
+    expect(resivedData.lyricsToDownload).to.includes.members(expectedData.lyricsToDownload)
     
     const listOfUrl = resivedData.lyricsToDownload.map(({ url }) => url)
     const listOfHtmls = await util.getMultipleHtmlFiles(listOfUrl)
@@ -193,5 +193,45 @@ describe.only('App use case', async () => {
 
       new Epub(epubData, path.join(os.homedir(), 'my-app', `${resivedData.name} - ${resivedData.artist}.epub`))
     })    
+  })
+
+  describe('getLyricsOfAlbum', async () => {
+    it.skip('Should return an Album that include translateLyric ' + 
+       'property with an object of english and spanish ' +
+       'lines of the lyric', async () => {
+
+      let resived = 
+
+      expect(resived).to.includes.key('translateLyric')
+      expect(resived.translateLyric).to.includes.property(['en', 'es'])
+
+    })
+  })
+
+  describe('saveAlbum', async () => {
+    it('Should return the path where saved the lyric', async () => {
+
+      const expectedData = [
+        path.join('my-app', 'lyrics','my-life', 'song1.txt'),
+        path.join('my-app', 'lyrics','my-life', 'song2.txt'),
+        path.join('my-app', 'lyrics','my-life', 'song3.txt')
+      ]
+
+      let albumData = {
+        url: 'some-url',
+        name: 'my-life',
+        artist: 'douglas',
+        lyrics: [
+          { title: 'song1', lyric: 'some lyrics', url: 'some-url-1', artist: ['douglas', 'halsey'] },
+          { title: 'song2', lyric: 'some lyrics', url: 'some-url-2', artist: ['douglas'] },
+          { title: 'song3', lyric: 'some lyrics', url: 'some-url-3' }
+        ]
+      }
+
+      let resivedData = await app.saveAlbum(albumData, { format: 'text' })
+
+      expect(resivedData).to.be.an('array')
+        .that.deep.includes.members(expectedData)
+    })
   })
 })

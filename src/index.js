@@ -20,6 +20,23 @@ const EventEmiter = require('events')
 //------------------ OUT OF INTERFACE --------------------//
 
 /**
+ * Represent a lyric song
+ * @typedef {Object} Lyric
+ * @property {string} title - Indicate the title.
+ * @property {Array<string>} artist - Contain all 
+ * @property {string} album - The album witch own this lyric.
+ * the artist that perform the song.
+ * @property {string} lyric - Contain the song writed.
+ **/
+
+/**
+ * Contain the information of a album.
+ * @typedef { Object } Album
+ * @property {string} name - Indicate the name.
+ * @property {string} artist - Indicate the main artist.
+ */
+
+/**
  * Create a new Aplication instance.
  * @class
  * @param {boolean} isTesting - Activate test mode
@@ -38,10 +55,13 @@ class Application extends EventEmiter{
     this.homedir = os.homedir()
     this.rootDir = Path.join(this.homedir, 'my-app', 'lyrics');
 
+
+    this.testDir = Path.join(this.rootDir, 'test')
+
     fse.ensureDirSync(this.rootDir)
 
     if(this.isTesting) {
-      fse.ensureDirSync(Path.join(this.rootDir, 'test'))
+      fse.ensureDirSync(this.testDir)
     }
   }
 
@@ -97,7 +117,8 @@ class Application extends EventEmiter{
     return albumData
   }
 
-  async getLyricsOfAlbum(albumData) {
+  async getLyricsOfAlbum(albumData, options) {
+
     const listOfUrl = albumData.lyricsToDownload.map(({ url }) => url)
     const listOfHtmls = await util.getMultipleHtmlFiles(listOfUrl)
     
@@ -117,7 +138,6 @@ class Application extends EventEmiter{
     listOfLyrics = listOfLyrics.map(({ value }) => value)
 
     return listOfLyrics
-
   }
 
 //------------------- APP SAVIORS ----------------------//
@@ -128,18 +148,18 @@ class Application extends EventEmiter{
   /**
    * Ensure a folder with the name of the album
    * and save individual lyrics in text files.
-   * @param {Album} albumData - The full data of the album
+   * @param {Album} album - The full data of the album
    * that will be save.
    * @param {Options} options - Options for saving the album.
    */
-  async saveAlbum(albumData, { format }) {
+  async saveAlbum(album, { format }) {
     switch(format) {
       case 'text': 
-        this._saveAlbumInTextFormat(albumData)
+        return await this._saveAlbumInTextFormat(album)
         break;
 
       case 'epub': 
-        this._saveAlbumInEpubFormat(albumData)
+        this._saveAlbumInEpubFormat(album)
         break;
         
       default:
@@ -147,12 +167,12 @@ class Application extends EventEmiter{
     }    
   }
 
-  async _saveAlbumInTextFormat(albumData) {
-    textSavior.saveAlbum(albumData, this.rootDir)
+  async _saveAlbumInTextFormat(album) {
+    return await textSavior.saveAlbum(album, this.rootDir)
   }
 
-  async _saveAlbumInEpubFormat(albumData) {
-    makeEpub(albumData, this.rootDir)
+  async _saveAlbumInEpubFormat(album) {
+    makeEpub(album, this.rootDir)
   }
 
 //------------------- APP USER INTERFACE ----------------------//

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha src/ --timeout=9999999999 --recursive --diff -w ",
     "start": "node index.js",
-    "doc": "jsdoc src/ -d doc/"
+    "doc": "jsdoc src/ -d doc/ --lenient",
+    "learn-t": "mocha exp/test.js -w "
   },
   "bin": {
     "lg": "./cli.js"

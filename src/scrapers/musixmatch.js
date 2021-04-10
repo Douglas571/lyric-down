@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom')
 
-exports.extractLyricData = async function (html, knownInfo = {}) {
+exports.extractLyricData = async function (html, knownInfo = { track: 0}) {
   const page = JSDOM.fragment(html)
 
   let url = ''
@@ -111,4 +111,50 @@ exports.extractAlbumData = function (html, knownInfo = {}) {
   })
 
   return albumData
+}
+
+exports.extractLyricTranslate = function(html, knownInfo = {}) {
+  const frag = JSDOM.fragment(html)
+
+  let lyric = knownInfo
+
+  if(!lyric.title) {
+    lyric.title = frag.querySelector('h1.mxm-track-title__track').textContent
+    lyric.title = lyric.title.replace('Letra y traducción', '')
+
+    if(lyric.title.indexOf(' (fe') > -1) 
+      lyric.title = lyric.title.slice(0, title.indexOf(' (fe'))
+  }
+
+  if(!lyric.artist) {
+    let art = frag.querySelectorAll('a.mxm-track-title__artist-link')
+    lyric.artist = []
+    for(let link of art) {
+      lyric.artist.push(link.textContent)
+    }
+  }  
+
+  const listNodes = frag.querySelectorAll('div.mxm-translatable-line-readonly')
+  const lines = Array.from(listNodes)
+  
+  let englishLine = []
+  let spanishLine = []
+
+  lines.forEach( line => {
+    const node = line.querySelectorAll('div.col-xs-6')
+    englishLine.push(node[0].textContent)
+    spanishLine.push(node[1].textContent)
+  })
+
+  englishLine = englishLine.map( line => line + '\n')
+  spanishLine = spanishLine.map( line => line + '\n')
+
+  lyric.lyric = englishLine.join('')
+
+  lyric.translateLyric = {
+    en: englishLine,
+    es: spanishLine
+  }
+
+  return lyric 
 }

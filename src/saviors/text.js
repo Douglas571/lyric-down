@@ -1,19 +1,36 @@
-exports.saveAlbum = function(albumData, rootDir) {
-  const albumName = album.name.split('//').join(' ').trim()
-  const textToSave = albumData
-                      .lyrics
-                      .map( lyric => { 
-                        const lyricTitle = lyric.title.split('//').join(' ').trim()
-                        const lyricArtist = lyric.artist.split('//').join(' ').trim()
+const fse = require('fs-extra')
+const os = require('os')
 
-                        return {
-                          filename: `${rootDir}\\${albumName}\\${lyricTitle} - ${lyricArtist}.txt`,
-                          text: formatData(lyric)
-                        }
-                      })
+exports.saveAlbum = async function({ name, lyrics }, rootDir) {
+  albumName = name.split('//').join(' ').trim()
 
-  textToSave
-    .forEach(({ filename, text }) => fse.outputFile(filename, text))
+  let listOfPath = 
+    lyrics
+      .map( lyric => { 
+        const title = lyric.title.split('//').join(' ').trim()
+       
+        return {
+          filename: `${rootDir}\\${albumName}\\${title}.txt`,
+          text: formatData(lyric)
+        }
+      })
+      .map(async ({ filename, text }) => {
+        try {
+          await fse.outputFile(filename, text)
+          return filename
+
+        } catch(err) {
+          throw err
+
+        }
+      })
+
+  listOfPath = await Promise.allSettled(listOfPath)
+
+  return listOfPath.map((promise) => {
+    let filename = promise.value
+    return filename.replace(os.homedir() + '\\', '')
+  })
 }
 
 /**
@@ -35,7 +52,7 @@ function formatData({ title, album, artist, lyric, url }){
     }
   }
 
-  let textToSave = `"${title}" from "${album}"\n`
+  let textToSave = `"${title}" from "${album}" album\n`
      textToSave += `by ${artist}\n\n`
      textToSave += `${lyric}\n\n`
      textToSave += `extracted from: "${url}"`

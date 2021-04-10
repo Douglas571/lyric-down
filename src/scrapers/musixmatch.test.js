@@ -6,7 +6,7 @@ const { stripIndents } = require('common-tags')
 const util = require('../util.js')
 const mms = require('./musixmatch.js');
 
-describe('Musixmatch scraper use case', async () => {
+describe.only('Musixmatch scraper use case', async () => {
   it('Should extract the lyric data from html file', async () => {
 
     const expectedData = {
@@ -61,10 +61,9 @@ describe('Musixmatch scraper use case', async () => {
 
     expect(html).to.be.a('string')
 
-    const resivedData = mms.extractLyricData(html, { 
+    const resivedData = await mms.extractLyricData(html, { 
       track: 1
     });
-
 
     expect(resivedData.url).to.be.equal(expectedData.url)
     expect(resivedData.track).to.be.equal(expectedData.track)
@@ -157,7 +156,7 @@ describe('Musixmatch scraper use case', async () => {
     }
 
     const html = util.readPage(path.join(__dirname, 'test-files', 'mms-l2.html'))
-    let resivedData = mms.extractLyricData(html)
+    let resivedData = await mms.extractLyricData(html)
 
     //Most important test
     expect(resivedData.artist).to.be.deep.equal(expectedData.artist)
@@ -180,7 +179,7 @@ describe('Musixmatch scraper use case', async () => {
       lyric: 'some lyric...'
     }
 
-    const resivedData = mms.extractLyricData('', expectedData)
+    const resivedData = await mms.extractLyricData('', expectedData)
 
     expect(resivedData).to.be.deep.equal(expectedData)
   })
@@ -307,12 +306,60 @@ describe('Musixmatch scraper use case', async () => {
     expect(resivedData.lyricsToDownload).to.be.deep.equal(expectedData.lyricsToDownload)
   })
 
+  it.only('Should extract the lyric with its translate', async () => {
+
+    let expectedData = {
+      title: 'Memories',
+      artist: ['Maroon 5'],
+      album: 'Singles',
+      lyric: "Cheers to the wish you were here, but you're not\n" +
+             "Of everything we've been through\n",
+      translateLyric: {
+        en: 
+        [
+          "Cheers to the wish you were here, but you're not\n",
+          "Of everything we've been through\n",
+          "Toast to the ones here today\n"
+        ],
+        es: 
+        [
+          "Brindemos por el deseo de que estuvieras aquí, pero no estás\n",
+          "Por todo lo que hemos pasado\n",
+          "Brindemos por los que hoy están aquí\n"
+        ]
+      }
+    }
+
+    const file = path.join(__dirname, 'test-files', 'mms-lt1A.html')
+    const html = await util.readPage(file)
+    let resived = mms.extractLyricTranslate(html)
+
+    expect(resived.translateLyric)
+          .to.be.an('object')
+          .that.includes.keys([ 'en', 'es'])
+
+    expect(resived.title).to.equal(expectedData.title)
+    expect(resived.artist).to.include.members(expectedData.artist)
+    expect(resived.lyric)
+      .to.be.a('string')
+      //.that.includes(expectedData.lyric)
+
+    expect(resived.translateLyric.en)
+      .to.include.members(expectedData.translateLyric.en)
+
+    expect(resived.translateLyric.es)
+      .to.include.members(expectedData.translateLyric.es)  
+
+  })
+})
+
+describe.skip('Mysixmatch scraper use case "On-Line"', async () => {
+
 })
 
 //TO-DOs
 
 /*
 
-  - add function to extract album list of lyrics
-  - add function to extract multiple artist of a lyric
+  - add a funtion to get a translate lyric
 */
