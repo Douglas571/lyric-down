@@ -12,7 +12,7 @@ const makeEpub = require('./saviors/epub.js')
 const os = require('os')
 
 
-describe('Application main cases', async () => {
+describe.skip('Application main cases', async () => {
   //await app.start()
   const app = new Application(true)
     
@@ -140,7 +140,7 @@ describe('Application main cases', async () => {
 
 
 const Epub = require('epub-gen');
-describe.only('Application', async () => {
+describe('Application', async () => {
   const app = new Application(true)
 
   it.skip('Should return the album and lyrics data from "musixmatch"', async () => {
@@ -196,15 +196,55 @@ describe.only('Application', async () => {
   })
 
   describe('getLyricsOfAlbum', async () => {
-    it.skip('Should return an Album that include translateLyric ' + 
-       'property with an object of english and spanish ' +
-       'lines of the lyric', async () => {
+    it.only('Should return the album lyrics with traduction', async () => {
 
-      let resived = 
+      let url = 'https://www.musixmatch.com/es/album/Harry-Styles/Fine-Line-1'
+      //let album = await app.getAlbum(url)
 
-      expect(resived).to.includes.key('translateLyric')
-      expect(resived.translateLyric).to.includes.property(['en', 'es'])
+      let album = {
+        url,
+        name: 'Fine Line',
+        artist: 'Harry Styles',
+        lyricsToDownload:
+        [
+          { track: 1, 
+            title: 'Golden', 
+            artist: ['Harry Styles'], 
+            album: 'Fine Line', 
+            url: 'https://www.musixmatch.com/es/letras/Harry-Styles/Golden',
+            state: 1
+          },
+          { track: 2, 
+            title: 'Watermelon Sugar', 
+            artist: ['Harry Styles'], 
+            album: 'Fine Line', 
+            url: 'https://www.musixmatch.com/es/letras/Harry-Styles/Watermelon-Sugar',
+            state: 1
+          },
+          { track: 3, 
+            title: 'Adore You', 
+            album: 'Fine Line', 
+            artist: ['Harry Styles'], 
+            album: 'Fine Line', 
+            url: 'https://www.musixmatch.com/es/letras/Harry-Styles/Adore-You-1',
+            state: 1
+          }
+        ],
+      }
 
+      album.lyrics = await app.getLyricsOfAlbum(album, { translate: true })
+
+      console.log(album.lyrics)
+
+      album.lyrics.forEach( song => {
+        expect(song.lyric.en).to.be.an('array')
+        expect(song.lyric.es).to.be.an('array')
+      })
+
+      //album.lyrics = await app.getLyricsOfAlbum(album, { translate: false })
+
+      const list = await app.saveAlbum(album, { format: 'text' })
+      console.log(list)
     })
   })
 

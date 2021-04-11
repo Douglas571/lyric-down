@@ -7,10 +7,21 @@ exports.saveAlbum = async function({ name, lyrics }, rootDir) {
   let listOfPath = 
     lyrics
       .map( lyric => { 
+        console.log(lyric)
         const title = lyric.title.split('//').join(' ').trim()
        
+        let filename
+
+        if(lyric.lyric.es) {
+          filename = `${rootDir}\\${albumName} (with spanish)\\${title} (with spanish).txt`
+
+        } else {
+          filename = `${rootDir}\\${albumName}\\${title}.txt`
+          
+        }
+
         return {
-          filename: `${rootDir}\\${albumName}\\${title}.txt`,
+          filename,
           text: formatData(lyric)
         }
       })
@@ -52,10 +63,36 @@ function formatData({ title, album, artist, lyric, url }){
     }
   }
 
-  let textToSave = `"${title}" from "${album}" album\n`
+
+  if(lyric.es) {
+    console.log(lyric.es[0])
+    console.log('have translate')
+    return formatDataWithTranslate({ lyric, title, artist, album, url})
+
+  } else {
+    let textToSave = `"${title}" from "${album}" album\n`
      textToSave += `by ${artist}\n\n`
      textToSave += `${lyric}\n\n`
      textToSave += `extracted from: "${url}"`
+
+    return textToSave  
+
+  }
+  
+}
+
+function formatDataWithTranslate({ lyric, title, artist, album, url }) {
+
+  let formatedLyric = []
+
+  lyric.en.forEach((line, idx) => {
+    formatedLyric +=  '- ' + line + '  ' + lyric.es[idx] + '\n'
+  })
+
+  let textToSave = `  "${title}" with spanish translate \n  from "${album}" album\n`
+     textToSave += `  by ${artist}\n\n`
+     textToSave += `${formatedLyric}\n\n`
+     textToSave += `  extracted from: "${url}"`
 
   return textToSave
 }

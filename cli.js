@@ -31,6 +31,7 @@ commandLine
   .option('-s, --save-lyric <url...>', 'Get a lyric of a song by url.')
   .option('-sa, --save-album <url>', 'Get a lyrics of from an album.')
   .option('-f, --format <type>', 'Specify format to save.')
+  .option('-t, --translate', 'Indicate if the lyric may be translate.')
   .parse();
 
 
@@ -53,18 +54,16 @@ process.on('uncaughtException', (err, org) => {
   if(option.saveAlbum) {
     const url = option.saveAlbum
     const format = option.format
-
-    logger.info(`Searching album ${url} and save has ${format}...`)
+    const translate = option.translate
 
     const albumData = await app.getAlbum(url)
+    logger.info('the album to download is:', { album: albumData})
 
-    logger.info('returned album info', {albumData})
+    albumData.lyrics = await app.getLyricsOfAlbum(albumData, { translate })
+    logger.info('the album saved is', { album: albumData })
 
-    albumData.lyrics = await app.getLyricsOfAlbum(albumData)
-
-    logger.info('returned lyrics', { lyrics: albumData.lyrics })
-
-    let paths = await app.saveAlbum(albumData, { format })
+    const paths = await app.saveAlbum(albumData, { format })
+    
     console.log('saved files')
     console.log(paths)
   }

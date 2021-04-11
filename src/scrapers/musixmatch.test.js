@@ -6,7 +6,7 @@ const { stripIndents } = require('common-tags')
 const util = require('../util.js')
 const mms = require('./musixmatch.js');
 
-describe.only('Musixmatch scraper use case', async () => {
+describe('Musixmatch scraper use case', async () => {
   it('Should extract the lyric data from html file', async () => {
 
     const expectedData = {
@@ -306,15 +306,9 @@ describe.only('Musixmatch scraper use case', async () => {
     expect(resivedData.lyricsToDownload).to.be.deep.equal(expectedData.lyricsToDownload)
   })
 
-  it.only('Should extract the lyric with its translate', async () => {
+  it('Should extract the lyric with it\'s translate', async () => {
 
     let expectedData = {
-      title: 'Memories',
-      artist: ['Maroon 5'],
-      album: 'Singles',
-      lyric: "Cheers to the wish you were here, but you're not\n" +
-             "Of everything we've been through\n",
-      translateLyric: {
         en: 
         [
           "Cheers to the wish you were here, but you're not\n",
@@ -328,27 +322,22 @@ describe.only('Musixmatch scraper use case', async () => {
           "Brindemos por los que hoy están aquí\n"
         ]
       }
-    }
+    
 
     const file = path.join(__dirname, 'test-files', 'mms-lt1A.html')
     const html = await util.readPage(file)
     let resived = mms.extractLyricTranslate(html)
 
-    expect(resived.translateLyric)
+    expect(resived)
           .to.be.an('object')
           .that.includes.keys([ 'en', 'es'])
 
-    expect(resived.title).to.equal(expectedData.title)
-    expect(resived.artist).to.include.members(expectedData.artist)
-    expect(resived.lyric)
-      .to.be.a('string')
-      //.that.includes(expectedData.lyric)
 
-    expect(resived.translateLyric.en)
-      .to.include.members(expectedData.translateLyric.en)
+    expect(resived.en)
+      .to.include.members(expectedData.en)
 
-    expect(resived.translateLyric.es)
-      .to.include.members(expectedData.translateLyric.es)  
+    expect(resived.es)
+      .to.include.members(expectedData.es)  
 
   })
 })

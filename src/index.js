@@ -117,25 +117,41 @@ class Application extends EventEmiter{
     return albumData
   }
 
-  async getLyricsOfAlbum(albumData, options) {
+  async getLyricsOfAlbum(albumData, options = {}) {
 
-    const listOfUrl = albumData.lyricsToDownload.map(({ url }) => url)
+    let listOfUrl = albumData.lyricsToDownload.map(({ url }) => url)
+
+    if(options.translate) {
+      listOfUrl = listOfUrl.map( url => url + '/traduccion/espanol' )
+    }
+
     const listOfHtmls = await util.getMultipleHtmlFiles(listOfUrl)
     
-    const scraper = this.getScraper(albumData.host)
-    
-    let listOfLyrics = listOfHtmls
-      .map(({ html, url }, idx) => 
-        scraper
+    const scraper = this.getScraper(albumData.url)
+    console.log('this is the scraper:' + scraper.name)
+
+    console.log(listOfHtmls.map(({ html, url}) => html.slice(0, 20) + '\n' + url))
+    let listOfLyrics = await listOfHtmls
+      .map(async ({ html, url }, idx) => {
+
+        //console.log(html.slice(0, 25));
+      
+        const lyric = await scraper
           .extractLyricData(html, { 
             track: (idx + 1),
             album: albumData.name,
             url
           })
-      )
+
+        console.log(lyric)
+        return lyric
+      })
     
-    listOfLyrics = await Promise.allSettled(listOfLyrics)
-    listOfLyrics = listOfLyrics.map(({ value }) => value)
+    //listOfLyrics = await Promise.allSettled(listOfLyrics)
+    //listOfLyrics = listOfLyrics.map(({ value }) => value)
+
+    console.log('The list fo lyrics is:')
+    console.log(listOfLyrics)
 
     return listOfLyrics
   }
@@ -155,6 +171,7 @@ class Application extends EventEmiter{
   async saveAlbum(album, { format }) {
     switch(format) {
       case 'text': 
+        console.log(album)
         return await this._saveAlbumInTextFormat(album)
         break;
 
