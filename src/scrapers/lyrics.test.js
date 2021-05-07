@@ -6,7 +6,7 @@ const { stripIndents } = require('common-tags')
 const util = require('../util.js')
 const l = require('./lyrics');
 
-describe('Lyrics scraper use cases', async () => {
+describe.skip('Lyrics scraper use cases', async () => {
   it('Should extract the lyric data from html', async () => {
     const expectedData = 
     {

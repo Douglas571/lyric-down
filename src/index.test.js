@@ -140,7 +140,7 @@ describe.skip('Application main cases', async () => {
 
 
 const Epub = require('epub-gen');
-describe('Application', async () => {
+describe.skip('Application', async () => {
   const app = new Application(true)
 
   it.skip('Should return the album and lyrics data from "musixmatch"', async () => {

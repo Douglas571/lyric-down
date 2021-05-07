@@ -6,7 +6,7 @@ const { stripIndents } = require('common-tags')
 const util = require('../util.js')
 const mms = require('./musixmatch.js');
 
-describe('Musixmatch scraper use case', async () => {
+describe.skip('Musixmatch scraper use case', async () => {
   it('Should extract the lyric data from html file', async () => {
 
     const expectedData = {
