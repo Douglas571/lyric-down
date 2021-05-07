@@ -3,7 +3,7 @@ const { JSDOM } = require('jsdom')
 
 exports.name = 'musixmatch'
 
-exports.extractLyricData = async function (html, knownInfo = { track: 0}) {
+exports.extractLyricData = function (html, knownInfo = { track: 0}) {
   console.log(colors.blue(html.slice(0, 25)))
   const page = JSDOM.fragment(html)
 

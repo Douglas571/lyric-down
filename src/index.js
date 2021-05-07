@@ -130,19 +130,24 @@ class Application extends EventEmiter{
     const scraper = this.getScraper(albumData.url)
     console.log('this is the scraper:' + scraper.name)
 
+    listOfHtmls.forEach(async (file, idx) => {
+       await fse.outputFile(`${idx}.html`, file.html)
+    })
     console.log(listOfHtmls.map(({ html, url}) => html.slice(0, 20) + '\n' + url))
     let listOfLyrics = await listOfHtmls
-      .map(async ({ html, url }, idx) => {
+      .map(({ html, url }, idx) => {
+        
 
         //console.log(html.slice(0, 25));
       
-        const lyric = await scraper
+        const lyric = scraper
           .extractLyricData(html, { 
             track: (idx + 1),
             album: albumData.name,
             url
           })
 
+        console.log('one lyric is'.white)
         console.log(lyric)
         return lyric
       })
