@@ -3,37 +3,62 @@ const fs = require('fs')
 const path = require('path')
 const colors = require('colors')
 
-async function getHtml(url) {
-  let req = got(url)
-  
+async function getHtml(url, delay = 0) {  
   setTimeout(() => {
-    req.cancel()
-  }, 60000)
-  
+    let req = got(url)
 
-  try {
-    console.log(`Searching ${url}`.yellow)
-    let res = await req;
-    const { body } = res;
-    console.log('downloaded:' + url)
-    console.log(body.slice(0, 25))
-    return body
-  } catch(err) {
-    console.log(colors.red(err.message))
-    if(req.isCanceled) {
-      console.log('the reques is canseled and resend:'.red + url)
-      return await getHtml(url)
+    setTimeout(() => {
+      req.cancel()
+    }, 60000)
+
+    try {
+      console.log(`Searching ${url}`.yellow)
+      let res = await req;
+      const { body } = res;
+      console.log('downloaded:' + url)
+      console.log(body.slice(0, 25))
+      return body
+    } catch(err) {
+      console.log(colors.red(err.message))
+      if(req.isCanceled) {
+        console.log('the reques is canseled and resend:'.red + url)
+        return await getHtml(url)
+      }
     }
-  }
+
+
+  }, delay)
 }
 
 exports.getHtml = getHtml;
+
+function getMultipleHtmlFiles(listOfUrl, delay) {
+  const listOfHtml = []
+
+  for(let idx = 0; idx < listOfUrl.length; idx++) {
+
+    const htmlOnCourse = new Promise((res, rej) => {
+      const time = idx * 1000 * delay;
+      setTimeout( () => {
+
+        getHtml(listOfUrl[idx])
+
+        res(`url: ${listOfUrl[idx]}; delay: ${time}ms`)
+
+      }, time)
+    })
+    
+    listOfHtml.push(htmlOnCourse)
+  }
+
+  return listOfHtml
+}
 
 exports.getMultipleHtmlFiles = async function(listOfUrl) {
 
   console.log(listOfUrl)
 
-  const listOfPromises = listOfUrl.map( url => getHtml(url))
+  const listOfPromises = listOfUrl.map( url => )
   const listOfResults = await Promise.allSettled(listOfPromises)
   const listOfHtml = listOfResults.map(({ value }) => value)
 
