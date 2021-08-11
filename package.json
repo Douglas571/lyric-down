@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
   "name": "lyric-down",
   "version": "0.2.0",
   "description": "a command line app for download and save song lyrics.",
-=======
-  "name": "cli",
-  "version": "1.0.0",
-  "description": "a command line app",
->>>>>>> skipAllTests
   "main": "index.js",
   "scripts": {
     "test": "mocha src/ --timeout=9999999999 --recursive --diff -w ",

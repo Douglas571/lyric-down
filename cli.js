@@ -36,6 +36,7 @@ commandLine
 
 
 process.on('uncaughtException', (err, org) => {
+  console.error({ err, org })
   logger.error({ err, org })
 });
 
@@ -46,10 +47,16 @@ process.on('uncaughtException', (err, org) => {
     const listOfUrls = option.saveLyric
     const format = option.saveAs
 
+    console.log(option)
+
+    /*
     listOfUrls.forEach( url => {
       app.getLyric({ url, format })
-    })   
+    })
+    */
   }
+
+  /*
 
   if(option.saveAlbum) {
     const url = option.saveAlbum
@@ -67,4 +74,5 @@ process.on('uncaughtException', (err, org) => {
     console.log('saved files')
     console.log(paths)
   }
+  */
 })();

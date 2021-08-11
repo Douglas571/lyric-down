@@ -3,8 +3,8 @@ const fs = require('fs')
 const path = require('path')
 const colors = require('colors')
 
-async function getHtml(url, delay = 0) {  
-  setTimeout(() => {
+async function getHtml(url, delay = 3000) {  
+  setTimeout(async () => {
     let req = got(url)
 
     setTimeout(() => {
@@ -58,7 +58,9 @@ exports.getMultipleHtmlFiles = async function(listOfUrl) {
 
   console.log(listOfUrl)
 
-  const listOfPromises = listOfUrl.map( url => )
+
+  //ALERTA: Arreglar esta linea de codigo, no tiene nada entre corchetes
+  const listOfPromises = listOfUrl.map( url => {} )
   const listOfResults = await Promise.allSettled(listOfPromises)
   const listOfHtml = listOfResults.map(({ value }) => value)
 

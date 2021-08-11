@@ -3,6 +3,7 @@ node_modules/
 lyrics/
 temp/
 exp/
+build/
 
 doc/
 log/
