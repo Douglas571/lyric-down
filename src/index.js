@@ -87,7 +87,7 @@ class Application extends EventEmiter{
     let scraper = this.getScraper(url)
 
     const html = await util.getHtml(url)
-    const lyricData = await scraper.extractLyricData(html)
+    const lyricData = scraper.extractLyricData(html)
 
     return lyricData
   }

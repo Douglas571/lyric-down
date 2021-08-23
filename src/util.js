@@ -5,6 +5,7 @@ const colors = require('colors')
 
 async function getHtml(url, delay = 3000) {  
   setTimeout(async () => {
+
     let req = got(url)
 
     setTimeout(() => {
@@ -16,7 +17,7 @@ async function getHtml(url, delay = 3000) {
       let res = await req;
       const { body } = res;
       console.log('downloaded:' + url)
-      console.log(body.slice(0, 25))
+      //console.log(body.slice(0, 25))
       return body
     } catch(err) {
       console.log(colors.red(err.message))

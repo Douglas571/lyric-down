@@ -48,12 +48,14 @@ process.on('uncaughtException', (err, org) => {
     const format = option.saveAs
 
     console.log(option)
+    //FOR GETTING THE AppData/roaming folder
+    //console.log(process.env.APPDATA)
+  
+    listOfUrls.forEach( async (url) => {
 
-    /*
-    listOfUrls.forEach( url => {
-      app.getLyric({ url, format })
+      const data = await app.getLyric(url)
     })
-    */
+  
   }
 
   /*

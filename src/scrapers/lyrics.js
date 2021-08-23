@@ -1,6 +1,7 @@
 const { JSDOM } = require('jsdom')
 
 exports.extractLyricData = function (html, knownData = {}) {
+  console.log('extracting data from Lyric.com')
   const page = JSDOM.fragment(html)
   const lyricData = {}
 
@@ -11,7 +12,7 @@ exports.extractLyricData = function (html, knownData = {}) {
   lyricData.artist = []
   page.querySelectorAll('h3.lyric-artist a[href*="artist/"')
       .forEach( artist => lyricData.artist.push(artist.textContent))
-
+ 
   lyricData.url = page.querySelector('meta[property="og:url"]').getAttribute('content')
 
   lyricData.track = (knownData.track)? knownData.track : 0;
