@@ -5,9 +5,14 @@ const readline = require('readline')
 
 function convertVideoToAudio2(videoPath, audioPath, metadata) {
 	return new Promise((res, rej) => {
-		console.log(videoPath)
-		console.log(audioPath)
+		if(process.env.DEBUG == "true") {
+			console.log('[CONVERT VIDEO TO AUDIO - DEBUG]')
+			console.log('  ', videoPath)
+			console.log('  ', audioPath)
+		}
+
 		const videoStream = fs.createReadStream(videoPath)
+
 
 		ffmpeg(videoStream)
 			.audioBitrate(128)

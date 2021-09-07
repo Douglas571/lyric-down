@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+
+    console.log(process.env)
+
 const EventEmiter = require('events')
 const path = require('path')
 
@@ -26,7 +29,7 @@ async function main() {
 
     artist: ['Ashe'],
     genre: 'Pop',
-    cover: undefined,
+    cover: undefined, //https://t2.genius.com/unsafe/522x0/https%3A%2F%2Fimages.genius.com%2Ffdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png
 
     year: 2021
   }

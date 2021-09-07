@@ -5,7 +5,7 @@ const ytdl = require('ytdl-core')
 const readline = require('readline');
 const fse = require('fs-extra')
 
-const { convertToAudio } = require('./util')
+const util = require('./util')
 
 class YoutubeMusicDownloader extends EventEmiter {
   constructor({ url, audioRate, metadata, audioPath }){
@@ -110,9 +110,9 @@ class YoutubeMusicDownloader extends EventEmiter {
   async run() {
     await this.ensureFolders()
 
-    await this.downloadVideo()
+    //await this.downloadVideo()
     await this.convertVideo()
-    //await this.writeMetadata()
+    await this.writeMetadata()
 
     this.emit('end', this._audioPath)
   }
