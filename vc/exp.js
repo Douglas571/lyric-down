@@ -8,10 +8,10 @@ const YoutubeMusicDownloader = require('./ymd')
 function makeAudioPath(metadata) {
   let { album, track, artist, title, year } = metadata
 
-  let folder = `${album}(${year})`
+  let folder = `${album} (${year})`
   let filename = `${track}.${artist}-${title}.mp3`
 
-  return path.join(__dirname, 'video', folder, filename)
+  return path.join(folder, filename)
 }
 
 async function main() {
@@ -44,8 +44,8 @@ async function main() {
     .on('start', (source) => {
       console.log('download start from: ', source)
     })
-    .on('downloading', (progress) => {
-      //console.log('downloading: ', progress)
+    .on('downloading', (state) => {
+      //console.log('downloading: ', state.percent)
     })
     .on('converting', (progress) => {
       console.log('converting: ', progress)

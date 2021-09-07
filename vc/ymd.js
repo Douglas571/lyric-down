@@ -15,20 +15,32 @@ class YoutubeMusicDownloader extends EventEmiter {
     this._audioRate = audioRate
     this._metadata = metadata
 
-    this._audioPath = audioPath
-    this._videoPath = ''
+    this._appData = path.join(process.env.APPDATA, 'ymd')
+    this._temp = path.join(this._appData, 'temp')
+    this._donwloadFolder = path.join(process.env.HOMEPATH, 'downloads')
 
-    this._folder = path.dirname(this._audioPath)
-
-    this._temp = path.join(__dirname, 'temp')
+    this._folder = path.join(this._donwloadFolder, path.dirname(audioPath))
+    this._audioPath = path.join(this._donwloadFolder, audioPath)
+    this._videoPath = path.join(this._temp, `${url.split('=')[1]}.mp4`)    
   }
 
-  async ensureDir() {
+  async ensureFolders() {
     try {
 
+      await fse.ensureDir(this._appData)
       await fse.ensureDir(this._temp)
       await fse.ensureDir(this._folder)
 
+      if(process.env.DEBUG == 'true') {
+        console.log('[FOLDER DEBUG]')
+        console.log("  + appdata: ", this._appData)
+        console.log("  + temp: ", this._temp)
+        console.log("  + folder: ", this._folder)
+        console.log("  + audio: ", this._audioPath)
+        console.log("  + video: ", this._videoPath)  
+        console.log()
+      }
+      
       return true
 
     } catch (err) {
@@ -38,47 +50,47 @@ class YoutubeMusicDownloader extends EventEmiter {
 
   downloadVideo(){
     return new Promise( (res, rej) => {
-      this.emit('downloading', 100)
 
-
-      this.ensureDir().then( () => {
-        let videoStream = ytdl(this._url, {
-          quality: 'highestaudio',
-        })
-
-        this._videoPath = path.join(this._temp, `${Date.now()}.mp4`)
-        let videoOutputStream = fse.createWriteStream(this._videoPath)
-
-        let starttime;
-        videoStream.once('response', () => {
-          this.emit('start', this._url)
-          starttime = Date.now();
-        });
-
-        videoStream.on('progress', (chunkLength, downloaded, total) => {
-          const percent = downloaded / total;
-
-          const downloadedMinutes = (Date.now() - starttime) / 1000 / 60;
-          const estimatedDownloadTime = (downloadedMinutes / percent) - downloadedMinutes;
-          readline.cursorTo(process.stdout, 0);
-          process.stdout.write(`${(percent * 100).toFixed(2)}% downloaded `);
-          process.stdout.write(`(${(downloaded / 1024 / 1024).toFixed(2)}MB of ${(total / 1024 / 1024).toFixed(2)}MB)\n`);
-          process.stdout.write(`running for: ${downloadedMinutes.toFixed(2)}minutes`);
-          process.stdout.write(`, estimated time left: ${estimatedDownloadTime.toFixed(2)}minutes `);
-          readline.moveCursor(process.stdout, 0, -1);
-        });
-
-        videoStream.on('end', () => {
-          process.stdout.write('finished download');
-          process.stdout.write('\n\n');
-
-          res(this._videoPath)  
-        });
-
-        videoStream.pipe(videoOutputStream)
+      let videoStream = ytdl(this._url, {
+        quality: 'highestaudio',
       })
-    })   
 
+      let videoOutputStream = fse.createWriteStream(this._videoPath)
+
+      let starttime;
+      videoStream.once('response', () => {
+        this.emit('start', this._url)
+        starttime = Date.now();
+      });
+
+      videoStream.on('progress', (chunkLength, downloaded, total) => {
+        let percent = downloaded / total;
+
+        let downloadedMinutes = (Date.now() - starttime) / 1000 / 60;
+        let estimatedDownloadTime = (downloadedMinutes / percent) - downloadedMinutes;
+        readline.cursorTo(process.stdout, 0);
+        process.stdout.write(`${(percent * 100).toFixed(2)}% downloaded `);
+        process.stdout.write(`(${(downloaded / 1024 / 1024).toFixed(2)}MB of ${(total / 1024 / 1024).toFixed(2)}MB)\n`);
+        process.stdout.write(`running for: ${downloadedMinutes.toFixed(2)}minutes`);
+        process.stdout.write(`, estimated time left: ${estimatedDownloadTime.toFixed(2)}minutes `);
+        readline.moveCursor(process.stdout, 0, -1);
+
+        percent = percent * 100
+        downloaded = ( downloaded / 1024 ) / 1024
+        total = (total / 1024) / 1024
+
+        this.emit('downloading', { percent, downloaded, total })
+      });
+
+      videoStream.on('end', () => {
+        process.stdout.write('finished download');
+        process.stdout.write('\n\n');
+
+        res(this._videoPath)
+      });
+
+      videoStream.pipe(videoOutputStream)
+    })   
   }
 
   async convertVideo(){
@@ -96,9 +108,11 @@ class YoutubeMusicDownloader extends EventEmiter {
   }
 
   async run() {
+    await this.ensureFolders()
+
     await this.downloadVideo()
     await this.convertVideo()
-    await this.writeMetadata()
+    //await this.writeMetadata()
 
     this.emit('end', this._audioPath)
   }

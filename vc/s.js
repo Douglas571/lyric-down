@@ -1,5 +1,8 @@
-let s = ['1', '2', '3']
+const path = require('path')
+const fs = require('fs')
 
-console.log(s[0])
-console.log(s.slice(1, s.length - 1).join(', '))
 
+
+console.log(appData)
+console.log(temp)
+console.log(fs.existsSync(donwloadFolder), " : ", donwloadFolder)
