@@ -7,3 +7,9 @@ build/
 
 doc/
 log/
+
+data/
+input/
+output
+temp/
+video/

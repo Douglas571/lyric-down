@@ -1,0 +1,44 @@
+descargar videos de youtube
+
+convertir video a audio
+agregar metadatos a partir de titulo, artista, album
+	- pedir confirmación si es correcto
+
+
+Identificar una carpeta con archivos
+
+
+INPUT
+	- 13 archivos de video
+	- 1 archivo JSON con datos del album
+		- titulo
+		- dirección al cover
+		- artista
+		- año
+		- lista de canciones:
+			- track
+			- titulo
+			- 
+
+
+PROCEDURE:
+	definir la ruta de salida de audio
+	optener las rutas de todos los archivos de video
+	para cada ruta
+		optener el archivo
+		convertir a audio con la mejor calidad
+
+		optener el titulo
+
+		buscar los datos del titulo en los metadatos
+
+		modificar metadatos
+
+		mover el audio a la ruta de salida
+END
+	- 13 archivos de audio
+	- con:
+		track
+		titulo
+		artista
+		album
