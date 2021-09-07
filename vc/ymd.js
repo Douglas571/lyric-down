@@ -31,7 +31,7 @@ class YoutubeMusicDownloader extends EventEmiter {
       await fse.ensureDir(this._temp)
       await fse.ensureDir(this._folder)
 
-      if(process.env.DEBUG == 'true') {
+      if(process.env.NODE_ENV == 'dev') {
         console.log('[FOLDER DEBUG]')
         console.log("  + appdata: ", this._appData)
         console.log("  + temp: ", this._temp)
@@ -96,7 +96,8 @@ class YoutubeMusicDownloader extends EventEmiter {
   async convertVideo(){
     this.emit('converting', 100)
 
-    await util.convertToAudio(path.join(this._temp, '4.mp4'), this._audioPath, this._metadata)
+    await util.convertToAudio(this._videoPath, 
+      this._audioPath, this._metadata)
 
     return this
   }
@@ -110,7 +111,7 @@ class YoutubeMusicDownloader extends EventEmiter {
   async run() {
     await this.ensureFolders()
 
-    //await this.downloadVideo()
+    await this.downloadVideo()
     await this.convertVideo()
     await this.writeMetadata()
 

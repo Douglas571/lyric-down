@@ -1,8 +1,5 @@
 require('dotenv').config();
 
-
-    console.log(process.env)
-
 const EventEmiter = require('events')
 const path = require('path')
 

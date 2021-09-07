@@ -5,7 +5,7 @@ const readline = require('readline')
 
 function convertVideoToAudio2(videoPath, audioPath, metadata) {
 	return new Promise((res, rej) => {
-		if(process.env.DEBUG == "true") {
+		if(process.env.NODE_ENV == "dev") {
 			console.log('[CONVERT VIDEO TO AUDIO - DEBUG]')
 			console.log('  ', videoPath)
 			console.log('  ', audioPath)
