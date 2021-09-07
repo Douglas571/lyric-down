@@ -29,7 +29,7 @@ async function main() {
 
     artist: ['Ashe'],
     genre: 'Pop',
-    cover: undefined, //https://t2.genius.com/unsafe/522x0/https%3A%2F%2Fimages.genius.com%2Ffdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png
+    cover: "C:\\Users\\Douglas.DESKTOP-5U87SPH\\AppData\\Roaming\\ymd\\temp\\https___images.genius.com_fdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png", //https://t2.genius.com/unsafe/522x0/https%3A%2F%2Fimages.genius.com%2Ffdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png
 
     year: 2021
   }
