@@ -39,7 +39,7 @@ function writeMetadata(audioPath, metadata) {
 		const tags = {
 		  album: metadata.album,
 		  artist: metadata.artist[0],
-		  performerInfo: metadata.artist.slice(1, s.length - 1).join(', '),
+		  performerInfo: metadata.artist.slice(1, metadata.artist.length - 1).join(', '),
 		  comment:
 		  {
 		  	language:"eng"
@@ -51,7 +51,7 @@ function writeMetadata(audioPath, metadata) {
 		  APIC: metadata.cover,
 		}
 
-		NodeID3.write(tags, filePath, (err) => {
+		NodeID3.write(tags, audioPath, (err) => {
 			if(err) throw new Error(err)
 			else {
 				res()

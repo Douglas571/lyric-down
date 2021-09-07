@@ -96,7 +96,7 @@ class YoutubeMusicDownloader extends EventEmiter {
   async convertVideo(){
     this.emit('converting', 100)
 
-    await util.convertToAudio(this._videoPath, this._audioPath, this._metadata)
+    await util.convertToAudio(path.join(this._temp, '4.mp4'), this._audioPath, this._metadata)
 
     return this
   }
