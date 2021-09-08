@@ -1,7 +1,9 @@
 require('dotenv').config();
 
-const EventEmiter = require('events')
 const path = require('path')
+const fs = require('fs')
+
+const YAML = require('yaml')
 
 const YoutubeMusicDownloader = require('./ymd')
 
@@ -9,27 +11,38 @@ function makeAudioPath(metadata) {
   let { album, track, artist, title, year } = metadata
 
   let folder = `${album} (${year})`
-  let filename = `${track}.${artist}-${title}.mp3`
+  let filename = `${track}.${artist[0]}-${title}.mp3`
 
   return path.join(folder, filename)
 }
 
 async function main() {
-  let url = 'https://www.youtube.com/watch?v=KeoLuSSpGW0'
+  //album data
+  let albumDataPath = path.join(__dirname, "album.yaml")
+  let ad =  fs.readFileSync(albumDataPath, 'utf8')
+  ad = YAML.parse(ad)
+  let { tracks } = ad
+
+  let num = 9
+
+  let url = tracks[num].yt_url
   let audioRate = 120
+
   let metadata = {
-    album: 'Ashlyn',
-    title: 'always',
+    album: ad.name,
+    title: tracks[num].title,
 
-    track: '00',
-    totalTracks: '00',
+    track: ( num < 10?  '0' + num : num ) ,
+    totalTracks: tracks.length,
 
-    artist: ['Ashe'],
-    genre: 'Pop',
-    cover: "C:\\Users\\Douglas.DESKTOP-5U87SPH\\AppData\\Roaming\\ymd\\temp\\https___images.genius.com_fdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png", //https://t2.genius.com/unsafe/522x0/https%3A%2F%2Fimages.genius.com%2Ffdb58c2930f130eff9e33f490d8b934c.1000x1000x1.png
+    artist: tracks[num].artist || ad.artist,
+    genre: ad.genre,
+    cover: ad.cover,
 
-    year: 2021
+    year: ad.year
   }
+
+  console.log(url, metadata)
 
   let audioPath = makeAudioPath(metadata)
 
