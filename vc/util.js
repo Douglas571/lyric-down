@@ -36,10 +36,23 @@ function convertVideoToAudio2(videoPath, audioPath, metadata) {
 
 function writeMetadata(audioPath, metadata) {
 	return new Promise((res, rej) => {
+
+		let mainArtist
+		let performerArtist
+
+		if(typeof metadata.artist == 'string') {
+			mainArtist = metadata.artist
+
+		} else {
+			mainArtist = metadata.artist.join(', ')
+			performerArtist = metadata.artist.slice(1, metadata.artist.length - 1).join(', ')
+
+		}
+
 		const tags = {
 		  album: metadata.album,
-		  artist: metadata.artist[0],
-		  performerInfo: metadata.artist.slice(1, metadata.artist.length - 1).join(', '),
+		  artist: mainArtist,
+		  performerInfo: performerArtist,
 		  comment:
 		  {
 		  	language:"eng"

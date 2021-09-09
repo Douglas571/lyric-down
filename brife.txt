@@ -1,3 +1,17 @@
+TO-DO
+
+	issue#4 agregar una caché para saber los videos descargados
+	issue#5 agregar opción para saltar paso de descarga
+	issue#6 cuando salte descarga, que convierta todos los videos disponibles
+
+	issue#7 Buscar toda la información de un album, y general una plantilla
+
+	issue#8 open a windows file explorer for find a "album data file1"
+
+	issue#9 create a "album data file" processor, that create individual meta tags for every song in album
+
+	issue#10 pulish interface
+
 descargar videos de youtube
 
 convertir video a audio

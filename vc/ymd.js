@@ -16,7 +16,7 @@ class YoutubeMusicDownloader extends EventEmiter {
     this._metadata = metadata
 
     this._appData = path.join(process.env.APPDATA, 'ymd')
-    this._temp = path.join(this._appData, 'temp')
+    this._temp = path.join(this._appData, 'temp', metadata.album)
     this._donwloadFolder = path.join(process.env.HOMEPATH, 'downloads')
 
     this._folder = path.join(this._donwloadFolder, path.dirname(audioPath))
@@ -52,7 +52,7 @@ class YoutubeMusicDownloader extends EventEmiter {
     return new Promise( (res, rej) => {
 
       let videoStream = ytdl(this._url, {
-        quality: 'highestaudio',
+        quality: "highestaudio"
       })
 
       let videoOutputStream = fse.createWriteStream(this._videoPath)
