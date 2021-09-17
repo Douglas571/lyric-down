@@ -25,15 +25,15 @@ function makeAudioPath(metadata) {
 
 async function main() {
 
+  console.log(process.argv)
+  let album_data_file = process.argv[3]
+  let num = process.argv[2]
+
   //album data
-  let albumDataPath = path.join(__dirname, "album - copia.yaml")
+  let albumDataPath = path.join(__dirname, `${album_data_file}.yaml`)
   let ad =  fs.readFileSync(albumDataPath, 'utf8')
   ad = YAML.parse(ad)
   let { tracks } = ad
-
-  let num = process.argv[2]
-  console.log(num)
-  console.log(ad.tracks[num - 1])
 
   let url = tracks[num - 1].yt_url
   let audioRate = 120
