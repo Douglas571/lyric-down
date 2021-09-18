@@ -15,9 +15,9 @@ function makeAudioPath(metadata) {
 
   if (typeof artist == "string" ) {
     console.log('Unico artista')
-    filename = `${track}.${artist}-${title}.mp3`
+    filename = `${track}.${artist} - ${title}.mp3`
   } else {
-    filename = `${track}.${artist[0]}-${title}.mp3`
+    filename = `${track}.${artist[0]} - ${title}.mp3`
   }
 
   return path.join(folder, filename)
@@ -25,7 +25,12 @@ function makeAudioPath(metadata) {
 
 async function main() {
 
-  console.log(process.argv)
+  if(process.env.NODE_ENV == 'dev') {
+    console.log('[CONSOLE ARGUMENTS DEBUG]')
+    console.log(process.argv)
+    console.log()
+  }
+  
   let album_data_file = process.argv[3]
   let num = process.argv[2]
 

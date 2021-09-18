@@ -12,6 +12,29 @@ TO-DO
 
 	issue#10 pulish interface
 
+	issue#11 hacer que busque los videos automáticamente
+	issue#12 hacer que busque los datos en internet
+
+	issue#13 remove somes console.log for production
+
+[CRITERIOS DE ACEPTACIÓN v1] {
+	- instalar como consola de comandos con npm
+
+	- Buscar archivos ".yaml"
+
+	- Diferenciar entre "album completo" y "playlist" en un archivo ".yaml"
+
+	- Descargar canciones de un archivo de instrucciones ".yaml"
+
+	- Recuperarce en casos de fallo de connección
+	- Informar si video no existe, y proseguir con el resto
+
+	- Si yá se descargó un archivo, no volver a descargarlo, a menos que se especifique con -r
+
+	- especificar dónde guardar los ".mp3"
+
+}
+
 descargar videos de youtube
 
 convertir video a audio

@@ -21,7 +21,24 @@ class YoutubeMusicDownloader extends EventEmiter {
 
     this._folder = path.join(this._donwloadFolder, path.dirname(audioPath))
     this._audioPath = path.join(this._donwloadFolder, audioPath)
-    this._videoPath = path.join(this._temp, `${url.split('=')[1]}.mp4`)    
+    this._audioPath = this._audioPath.replace(/[?]/ig, "")
+
+    this._videoYoutubeId = url.split('=')[1]
+
+    this._videoPath = path.join(this._temp, `${this._videoYoutubeId}.mp4`)    
+
+    this._cachePath = path.join(__dirname, 'cache.json')
+    this._cache = JSON.parse(fse.readFileSync(this._cachePath))
+
+    if(this._cache[this._metadata.album] == undefined) {
+      this._cache[this._metadata.album] = []
+
+      if(process.env.NODE_ENV == 'dev') {
+        console.log('[CACHE DEBUG]')
+        console.log(JSON.stringify(this._cache, null, 4))
+        console.log()  
+      }
+    }
   }
 
   async ensureFolders() {
@@ -86,6 +103,8 @@ class YoutubeMusicDownloader extends EventEmiter {
         process.stdout.write('finished download');
         process.stdout.write('\n\n');
 
+        this.saveCache()
+
         res(this._videoPath)
       });
 
@@ -108,10 +127,34 @@ class YoutubeMusicDownloader extends EventEmiter {
     return this
   }
 
+  async saveCache() {
+    const { album } = this._metadata
+    this._cache[album].push(this._videoYoutubeId)
+
+    if(process.env.NODE_ENV == 'dev') {
+      console.log('[SAVING CACHE DEBUG]')
+      console.log(JSON.stringify(this._cache, null, 4))  
+      console.log()
+    }
+
+    fse.writeFile(this._cachePath, JSON.stringify(this._cache, null, 4))
+  }
+
+  isVideoInCache() {
+    return this._cache[this._metadata.album].includes(this._videoYoutubeId)
+  }
+
   async run() {
     await this.ensureFolders()
 
-    await this.downloadVideo()
+    if(!this.isVideoInCache()) {
+      console.log(`${this._videoYoutubeId} not in cache`)
+      await this.downloadVideo()
+
+    } else {
+      console.log(`${this._videoYoutubeId} is in cache`)
+    }
+
     await this.convertVideo()
     await this.writeMetadata()
 
