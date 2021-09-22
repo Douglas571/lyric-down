@@ -23,6 +23,8 @@
 
 - Buscar archivos ".yaml"
 
+- Buscar datos para canciones individuales
+- Descargar una "playlist" o canciones individuales
 - Diferenciar entre "album completo" y "playlist" en un archivo ".yaml"
 
 - Descargar canciones de un archivo de instrucciones ".yaml"
