@@ -5,9 +5,14 @@ const readline = require('readline')
 
 function convertVideoToAudio2(videoPath, audioPath, metadata) {
 	return new Promise((res, rej) => {
-		console.log(videoPath)
-		console.log(audioPath)
+		if(process.env.NODE_ENV == "dev") {
+			console.log('[CONVERT VIDEO TO AUDIO - DEBUG]')
+			console.log('  ', videoPath)
+			console.log('  ', audioPath)
+		}
+
 		const videoStream = fs.createReadStream(videoPath)
+
 
 		ffmpeg(videoStream)
 			.audioBitrate(128)
@@ -31,10 +36,23 @@ function convertVideoToAudio2(videoPath, audioPath, metadata) {
 
 function writeMetadata(audioPath, metadata) {
 	return new Promise((res, rej) => {
+
+		let mainArtist
+		let performerArtist
+
+		if(typeof metadata.artist == 'string') {
+			mainArtist = metadata.artist
+
+		} else {
+			mainArtist = metadata.artist.join(', ')
+			performerArtist = metadata.artist.slice(1, metadata.artist.length - 1).join(', ')
+
+		}
+
 		const tags = {
 		  album: metadata.album,
-		  artist: metadata.artist[0],
-		  performerInfo: metadata.artist.slice(1, s.length - 1).join(', '),
+		  artist: mainArtist,
+		  performerInfo: performerArtist,
 		  comment:
 		  {
 		  	language:"eng"
@@ -46,7 +64,7 @@ function writeMetadata(audioPath, metadata) {
 		  APIC: metadata.cover,
 		}
 
-		NodeID3.write(tags, filePath, (err) => {
+		NodeID3.write(tags, audioPath, (err) => {
 			if(err) throw new Error(err)
 			else {
 				res()

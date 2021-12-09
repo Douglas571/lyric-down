@@ -1,35 +1,63 @@
 require('dotenv').config();
 
-const EventEmiter = require('events')
 const path = require('path')
+const fs = require('fs')
+
+const YAML = require('yaml')
 
 const YoutubeMusicDownloader = require('./ymd')
 
 function makeAudioPath(metadata) {
   let { album, track, artist, title, year } = metadata
 
-  let folder = `${album}(${year})`
-  let filename = `${track}.${artist}-${title}.mp3`
+  let folder = `${album} (${year})`
+  let filename;
 
-  return path.join(__dirname, 'video', folder, filename)
+  if (typeof artist == "string" ) {
+    console.log('Unico artista')
+    filename = `${track}.${artist} - ${title}.mp3`
+  } else {
+    filename = `${track}.${artist[0]} - ${title}.mp3`
+  }
+
+  return path.join(folder, filename)
 }
 
 async function main() {
-  let url = 'https://www.youtube.com/watch?v=KeoLuSSpGW0'
-  let audioRate = 120
-  let metadata = {
-    album: 'Ashlyn',
-    title: 'always',
 
-    track: '00',
-    totalTracks: '00',
-
-    artist: ['Ashe'],
-    genre: 'Pop',
-    cover: undefined,
-
-    year: 2021
+  if(process.env.NODE_ENV == 'dev') {
+    console.log('[CONSOLE ARGUMENTS DEBUG]')
+    console.log(process.argv)
+    console.log()
   }
+  
+  let album_data_file = process.argv[3]
+  let num = process.argv[2]
+
+  //album data
+  let albumDataPath = path.join(__dirname, `${album_data_file}.yaml`)
+  let ad =  fs.readFileSync(albumDataPath, 'utf8')
+  ad = YAML.parse(ad)
+  let { tracks } = ad
+
+  let url = tracks[num - 1].yt_url
+  let audioRate = 120
+
+  let metadata = {
+    album: ad.name,
+    title: tracks[num - 1].title,
+
+    track: ( num < 10?  '0' + num : num ) ,
+    totalTracks: tracks.length,
+
+    artist: tracks[num - 1].artist || ad.artist,
+    genre: ad.genre,
+    cover: ad.cover,
+
+    year: ad.year
+  }
+
+  console.log(url, metadata)
 
   let audioPath = makeAudioPath(metadata)
 
@@ -44,8 +72,8 @@ async function main() {
     .on('start', (source) => {
       console.log('download start from: ', source)
     })
-    .on('downloading', (progress) => {
-      //console.log('downloading: ', progress)
+    .on('downloading', (state) => {
+      //console.log('downloading: ', state.percent)
     })
     .on('converting', (progress) => {
       console.log('converting: ', progress)
